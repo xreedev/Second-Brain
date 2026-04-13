@@ -2,38 +2,12 @@ from __future__ import annotations
 
 import io
 import re
-import sys
-import textwrap
 from pathlib import Path
-from typing import Literal
 from xml.etree.ElementTree import Element, SubElement, tostring, indent
-
-# ─── optional imports (checked at runtime) ──────────────────────────────────
-try:
-    import requests
-    _HAS_REQUESTS = True
-except ImportError:
-    _HAS_REQUESTS = False
-
-try:
-    from pdfminer.high_level import extract_pages
-    from pdfminer.layout import LTPage, LTTextBox, LTTextLine, LTChar, LTAnon, LTFigure
-    _HAS_PDFMINER = True
-except ImportError:
-    _HAS_PDFMINER = False
-
-try:
-    from pypdf import PdfReader
-    _HAS_PYPDF = True
-except ImportError:
-    _HAS_PYPDF = False
+from pypdf import PdfReader
 
 
-# ─── Section-heading patterns ────────────────────────────────────────────────
-
-# Standard academic sections (ordered by priority)
 _SECTION_PATTERNS = [
-    # Numbered: "1  Introduction", "2.3 Related Work", "A. Appendix"
     re.compile(
         r"^(?P<num>(?:\d+\.?)+|[A-Z]\.?)\s{1,4}(?P<title>[A-Z][A-Za-z &\-/:,()]{2,60})$"
     ),
@@ -79,46 +53,6 @@ _MEDICAL_EXTRA = re.compile(
 _ALL_PATTERNS = _SECTION_PATTERNS + [_MEDICAL_EXTRA]
 
 
-# ─── PDF text extraction ─────────────────────────────────────────────────────
-
-def _extract_text_pdfminer(pdf_bytes: bytes) -> list[dict]:
-    """
-    Extract text with basic font-size metadata using pdfminer.
-    Returns list of dicts: {text, size, bold, page}.
-    """
-    lines = []
-    for page_num, page_layout in enumerate(
-        extract_pages(io.BytesIO(pdf_bytes)), start=1
-    ):
-        for element in page_layout:
-            if not isinstance(element, LTTextBox):
-                continue
-            for line in element:
-                if not isinstance(line, LTTextLine):
-                    continue
-                text = line.get_text().strip()
-                if not text:
-                    continue
-                sizes, bold_flags = [], []
-                for char in line:
-                    if isinstance(char, LTChar):
-                        sizes.append(char.size)
-                        bold_flags.append("Bold" in (char.fontname or ""))
-                avg_size = sum(sizes) / len(sizes) if sizes else 10.0
-                is_bold = bool(bold_flags) and (
-                    sum(bold_flags) / len(bold_flags) > 0.5
-                )
-                lines.append(
-                    {
-                        "text": text,
-                        "size": round(avg_size, 1),
-                        "bold": is_bold,
-                        "page": page_num,
-                    }
-                )
-    return lines
-
-
 def _extract_text_pypdf(pdf_bytes: bytes) -> list[dict]:
     """Fallback: flat text extraction via pypdf."""
     reader = PdfReader(io.BytesIO(pdf_bytes))
@@ -133,14 +67,8 @@ def _extract_text_pypdf(pdf_bytes: bytes) -> list[dict]:
 
 
 def _extract_lines(pdf_bytes: bytes) -> list[dict]:
-    if _HAS_PDFMINER:
-        return _extract_text_pdfminer(pdf_bytes)
-    if _HAS_PYPDF:
         return _extract_text_pypdf(pdf_bytes)
-    raise RuntimeError("Neither pdfminer.six nor pypdf is installed.")
 
-
-# ─── Heading detection ───────────────────────────────────────────────────────
 
 def _is_heading(line: dict, body_size: float) -> tuple[bool, str | None]:
     """
@@ -148,10 +76,8 @@ def _is_heading(line: dict, body_size: float) -> tuple[bool, str | None]:
     Uses font-size heuristic + regex patterns.
     """
     text = line["text"].strip()
-    # Skip very short or very long lines
     if len(text) < 2 or len(text) > 120:
         return False, None
-    # Skip lines that are mostly numbers/symbols (tables, equations)
     alpha_ratio = sum(c.isalpha() for c in text) / max(len(text), 1)
     if alpha_ratio < 0.4:
         return False, None
@@ -162,7 +88,7 @@ def _is_heading(line: dict, body_size: float) -> tuple[bool, str | None]:
         m = pat.match(text)
         if m:
             title = m.group("title") if "title" in pat.groupindex else text
-            # Numbered headings get title from the `title` capture group
+            # Numbered headings  title from the `title` capture group
             if "num" in pat.groupindex:
                 num = m.group("num")
                 title = f"{num} {title}"
@@ -200,12 +126,10 @@ def _build_sections(lines: list[dict]) -> list[dict]:
     for line in lines:
         is_h, title = _is_heading(line, body_size)
 
-        # Special-case: first lines before any heading → "Preamble" (title/authors)
         if current is None and not is_h:
             current = {"heading": "Preamble", "page": line["page"], "lines": []}
 
         if is_h:
-            # Save previous section
             if current is not None:
                 sections.append(current)
             current = {"heading": title, "page": line["page"], "lines": []}
@@ -222,9 +146,7 @@ def _build_sections(lines: list[dict]) -> list[dict]:
 def _clean_section_text(raw_lines: list[str]) -> str:
     """Join lines, collapse hyphenated line-breaks, normalise whitespace."""
     joined = " ".join(raw_lines)
-    # Re-join hyphenated words split across lines (common in PDFs)
     joined = re.sub(r"-\s+([a-z])", r"\1", joined)
-    # Collapse multiple spaces
     joined = re.sub(r" {2,}", " ", joined)
     return joined.strip()
 
@@ -234,13 +156,11 @@ def _clean_section_text(raw_lines: list[str]) -> str:
 def _to_xml(meta: dict, sections: list[dict]) -> str:
     root = Element("paper")
 
-    # Metadata
     meta_el = SubElement(root, "metadata")
     for k, v in meta.items():
         el = SubElement(meta_el, k)
         el.text = str(v)
 
-    # Sections
     body_el = SubElement(root, "body")
     for sec in sections:
         sec_el = SubElement(body_el, "section")
@@ -254,9 +174,6 @@ def _to_xml(meta: dict, sections: list[dict]) -> str:
     return '<?xml version="1.0" encoding="utf-8"?>\n' + tostring(
         root, encoding="unicode"
     )
-
-
-def _to_html(meta: dict, sections: list[dict]) -> str:
     title = meta.get("title", "arXiv Paper")
     parts = [
         "<!DOCTYPE html>",
@@ -299,18 +216,6 @@ def _to_html(meta: dict, sections: list[dict]) -> str:
     return "\n".join(parts)
 
 
-def _esc(text: str) -> str:
-    """HTML-escape a string."""
-    return (
-        text.replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace('"', "&quot;")
-    )
-
-
-# ─── PDF acquisition ─────────────────────────────────────────────────────────
-
 def _load_pdf(source: str | Path | bytes) -> tuple[bytes, dict]:
     """
     Accepts:
@@ -325,31 +230,12 @@ def _load_pdf(source: str | Path | bytes) -> tuple[bytes, dict]:
 
     source_str = str(source).strip()
 
-    # arXiv ID  (e.g. "2401.12345", "arxiv:2401.12345", or full URL)
-    arxiv_id_pat = re.compile(
-        r"(?:arxiv[:\s/]*)?(\d{4}\.\d{4,5}(?:v\d+)?)$", re.IGNORECASE
-    )
-    m = arxiv_id_pat.search(source_str)
-    if m:
-        arxiv_id = m.group(1)
-        if not _HAS_REQUESTS:
-            raise RuntimeError("'requests' is required to download from arXiv.")
-        pdf_url = f"https://arxiv.org/pdf/{arxiv_id}"
-        abs_url = f"https://arxiv.org/abs/{arxiv_id}"
-        print(f"[arxiv_parser] Downloading {pdf_url} …", file=sys.stderr)
-        resp = requests.get(pdf_url, timeout=60, headers={"User-Agent": "arxiv-parser/1.0"})
-        resp.raise_for_status()
-        meta = {"source": abs_url, "arxiv_id": arxiv_id}
-        return resp.content, meta
-
     # Local file
     path = Path(source_str)
     if not path.exists():
         raise FileNotFoundError(f"File not found: {path}")
     return path.read_bytes(), {"source": str(path.resolve())}
 
-
-# ─── Metadata extraction from preamble ───────────────────────────────────────
 
 def _extract_meta_from_preamble(sections: list[dict], base_meta: dict) -> dict:
     """
@@ -365,14 +251,11 @@ def _extract_meta_from_preamble(sections: list[dict], base_meta: dict) -> dict:
     if not lines:
         return meta
 
-    # Title: usually the longest line in the first few, all-non-lower
     candidates = [l for l in lines[:10] if len(l) > 10]
     if candidates:
-        # Heuristic: title tends to be the longest of the first 3 non-trivial lines
         title_line = max(candidates[:3], key=len)
         meta.setdefault("title", title_line)
 
-    # Authors: line(s) after the title that contain commas or "and"
     if "title" in meta:
         title_idx = next(
             (i for i, l in enumerate(lines) if l == meta["title"]), -1
@@ -385,11 +268,8 @@ def _extract_meta_from_preamble(sections: list[dict], base_meta: dict) -> dict:
     return meta
 
 
-# ─── Main public function ─────────────────────────────────────────────────────
-
 def parse_arxiv(
     source: str | Path | bytes,
-    output_format: Literal["xml", "html"] = "xml",
     title: str | None = None,
     authors: str | None = None,
 ) -> str:
@@ -403,8 +283,6 @@ def parse_arxiv(
         - An arXiv ID  (e.g. ``"2401.12345"`` or ``"arxiv:2401.12345"``)
         - A local path to a PDF file (``str`` or ``pathlib.Path``)
         - Raw PDF bytes
-    output_format : {"xml", "html"}
-        Format of the returned string. Defaults to ``"xml"``.
     title : str, optional
         Override the detected paper title.
     authors : str, optional
@@ -430,7 +308,6 @@ def parse_arxiv(
     sections = _build_sections(lines)
     meta = _extract_meta_from_preamble(sections, base_meta)
 
-    # Allow caller overrides
     if title:
         meta["title"] = title
     if authors:
@@ -439,31 +316,4 @@ def parse_arxiv(
     meta.setdefault("total_pages", max(l["page"] for l in lines))
     meta.setdefault("sections_found", len([s for s in sections if s["heading"] != "Preamble"]))
 
-    if output_format == "html":
-        return _to_html(meta, sections)
     return _to_xml(meta, sections)
-
-
-# ─── CLI convenience ──────────────────────────────────────────────────────────
-
-if __name__ == "__main__":
-    import argparse
-
-    ap = argparse.ArgumentParser(description="Parse an arXiv paper into XML or HTML.")
-    ap.add_argument("source", help="arXiv ID (e.g. 2401.12345) or path to a PDF file")
-    ap.add_argument(
-        "--format", choices=["xml", "html"], default="xml", dest="fmt",
-        help="Output format (default: xml)"
-    )
-    ap.add_argument("--output", "-o", default=None, help="Write to this file (default: stdout)")
-    ap.add_argument("--title", default=None, help="Override paper title")
-    ap.add_argument("--authors", default=None, help="Override authors")
-    args = ap.parse_args()
-
-    result = parse_arxiv(args.source, output_format=args.fmt, title=args.title, authors=args.authors)
-
-    if args.output:
-        Path(args.output).write_text(result, encoding="utf-8")
-        print(f"Written to {args.output}", file=sys.stderr)
-    else:
-        print(result)
