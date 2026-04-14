@@ -6,10 +6,13 @@ class ChromDBService:
         chroma_client = chromadb.Client()
         self.collection = chroma_client.get_or_create_collection(name=collection_name)
         
-    def store_sections_in_chroma(self,sections):
+    def store_sections_in_chroma(self, sections):
         self.collection.add(
-            ids= [str(sec["id"]) for sec in sections],
+            ids=[str(sec["id"]) for sec in sections],
             documents=[sec["content"] for sec in sections],
+            metadatas=[
+                {"sourceid": sec.get("sourceid", "")} for sec in sections
+            ],
         )
         print("Sections stored in ChromaDB")
     

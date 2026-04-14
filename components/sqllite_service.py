@@ -14,7 +14,8 @@ class SQLiteService:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             content TEXT,
             page INTEGER,
-            heading TEXT
+            heading TEXT,
+            sourceid TEXT
         )
         """)
         self.conn.commit()
@@ -22,12 +23,15 @@ class SQLiteService:
 
     def store_sections_in_sqlite(self, sections):
         self.cursor.executemany(
-        "INSERT INTO documents (content, page, heading) VALUES (?, ?, ?)",
-        sections)
+            "INSERT INTO documents (content, page, heading, sourceid) VALUES (?, ?, ?, ?)",
+            sections,
+        )
         self.conn.commit()
         print("Sections stored in SQLite")
-        
+
     def get_sections_from_sqlite(self):
-        self.cursor.execute("SELECT id, content, heading, page FROM documents")
+        self.cursor.execute(
+            "SELECT id, content, heading, page, sourceid FROM documents"
+        )
         results = self.cursor.fetchall()
         return [dict(row) for row in results]

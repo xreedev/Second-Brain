@@ -1,39 +1,56 @@
-from arxiv_parser import parse_arxiv
-# from arxiv_chroma import store_sections_in_chroma, get_sections_from_chroma
-from sqllite_service import store_sections_in_sqlite, get_sections_from_sqlite
-from summarize_agent import summarize_scientific_paper_to_markdown
+from pathlib import Path
 import xml.etree.ElementTree as ET
 
-xml  = parse_arxiv("paper/test.pdf")
-root = ET.fromstring(xml)
+from components.arxiv_chroma import ChromDBService
+from components.arxiv_parser import ArxivParser
+from components.sqllite_service import SQLiteService
+from components.summarize_agent import GeminiAgent
 
-sections = []
 
-for sec in root.findall(".//section"):
-    heading = sec.find("heading")
-    content = sec.find("content")
+def main() -> None:
+    pdf_path = Path("paper/test.pdf")
+    if not pdf_path.exists():
+        raise FileNotFoundError(f"PDF file not found: {pdf_path}")
 
-    sections.append({
-        "heading": heading.text if heading is not None else "",
-        "content": content.text if content is not None else "",
-        "page": sec.attrib.get("page")
-    })
-print(f"Extracted {len(sections)} sections from the paper.")
+    parser = ArxivParser()
+    sqlite_service = SQLiteService(db_name="papers.db")
+    chroma_service = ChromDBService(collection_name="research")
+    gemini_agent = GeminiAgent(system_prompt="Please summarize the paper in markdown.\n\n")
 
-store_sections_in_sqlite([(sec["content"], sec["page"], sec["heading"]) for sec in sections])
-retrieved_sections = get_sections_from_sqlite()
-print("Sections retrieved from SQLite:")
+    xml_output = parser.parse(pdf_path, output_format="xml")
+    print("Parsed PDF to XML successfully.")
 
-# store_sections_in_chroma([{ "content": sec["content"], "id": sec["id"] }
-#     for sec in retrieved_sections 
-#     if sec["content"] and isinstance(sec["content"], str) and sec["content"].strip()])
-# query = "What is the main contribution of the paper?"
-# retrieved_sections = get_sections_from_chroma(query)
-# print("Retrieved sections from chroma")
+    source_id = str(pdf_path.resolve())
+    sections = parser.extract_sections_from_xml(xml_output)
+    print(f"Extracted {len(sections)} sections from the paper.")
 
-paper_data = text = "".join(ET.fromstring(xml).itertext())
-summary = summarize_scientific_paper_to_markdown(paper_data)
-print(summary)
+    sqlite_service.create_table("documents")
+    sqlite_service.store_sections_in_sqlite(
+        [
+            (sec["content"], sec["page"], sec["heading"], source_id)
+            for sec in sections
+        ]
+    )
+    print("Stored sections in SQLite.")
 
-with open("output.md", "w", encoding="utf-8") as f:
-    f.write(summary)
+    retrieved_sections = sqlite_service.get_sections_from_sqlite()
+    print(f"Retrieved {len(retrieved_sections)} sections from SQLite.")
+
+    chroma_service.store_sections_in_chroma(retrieved_sections)
+    print("Stored sections in ChromaDB.")
+
+    query = "What is the main contribution of the paper?"
+    chroma_results = chroma_service.get_sections_from_chroma(query)
+    print("Chroma query results:", chroma_results)
+
+    paper_text = parser.build_paper_text(retrieved_sections)
+    summary = gemini_agent.summarize_scientific_paper_to_markdown(paper_text)
+    print("Generated paper summary.")
+
+    output_file = Path("output.md")
+    output_file.write_text(summary, encoding="utf-8")
+    print(f"Summary written to {output_file.resolve()}")
+
+
+if __name__ == "__main__":
+    main()
