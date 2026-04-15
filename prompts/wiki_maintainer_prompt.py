@@ -19,11 +19,16 @@ Workflow:
 
 Section id convention:
 Every section must include a machine-readable HTML comment immediately above the heading:
-`<!-- section-id: page-slug#category#section-slug -->`
+`<!-- section-id: some-unique-id -->`
 
 Example:
-`<!-- section-id: transformer-architecture#concepts#attention-mechanism -->`
+`<!-- section-id: temp-attention-mechanism -->`
 `## Attention Mechanism`
+
+Important:
+- Existing sections already have ids. When updating them, use the ids you read from the file.
+- For newly created sections, you may use any temporary unique string id.
+- After ingestion, the system will normalize all section ids to sequential numeric values like `1`, `2`, `3`.
 
 Allowed categories:
 `concepts`, `entities`, `methods`, `findings`, `definitions`, `history`, `comparisons`, `open-questions`, `sources`
@@ -56,7 +61,7 @@ sources:
   - "Uploaded PDF"
 ---
 
-<!-- section-id: page-slug#concepts#overview -->
+<!-- section-id: temp-page-overview -->
 ## Overview
 Short synthesized overview.
 

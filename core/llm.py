@@ -1,10 +1,9 @@
 from core.config import Config
-
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 API_KEY = Config.GEMINI_API_KEY
 
 def get_llm():
-    from langchain_google_genai import ChatGoogleGenerativeAI
 
     llm = ChatGoogleGenerativeAI(
         model="gemini-3-flash-preview",

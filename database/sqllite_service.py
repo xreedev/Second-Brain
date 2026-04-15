@@ -1,5 +1,33 @@
 import sqlite3
+import os
 from core.config import Config
+
+
+def _initialize_database(db_name=Config.SOURCE_DB_NAME):
+    db_dir = os.path.dirname(db_name)
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
+
+    conn = sqlite3.connect(db_name)
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS documents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                content TEXT,
+                page INTEGER,
+                heading TEXT,
+                sourceid TEXT
+            )
+            """
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+_initialize_database()
 
 
 class SQLiteService:
@@ -8,19 +36,6 @@ class SQLiteService:
         conn.row_factory = sqlite3.Row
         self.cursor = conn.cursor()
         self.conn = conn
-
-    def create_table(self, table_name):
-        self.cursor.execute(f"""
-        CREATE TABLE IF NOT EXISTS {table_name} (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            content TEXT,
-            page INTEGER,
-            heading TEXT,
-            sourceid TEXT
-        )
-        """)
-        self.conn.commit()
-        print(f"Table '{table_name}' created in SQLite database.")
 
     def store_sections_in_sqlite(self, sections, source_id):
         normalized_sections = []

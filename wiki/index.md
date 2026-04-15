@@ -14,6 +14,7 @@
 | [[model-temperament-index]] | Measurement Axes | model-temperament-index#methods#measurement-axes | A profiling instrument for behavioral dimensions (Reactivity, Compliance, Sociality, Resilience). |
 | [[model-assessment-frameworks]] | Diagnostic Stack | model-assessment-frameworks#methods#diagnostic-stack | A five-layer stack for comprehensive model evaluation (Core, Phenotype, Shell, Pathway, Temporal). |
 | [[model-assessment-frameworks]] | M-CARE Framework | model-assessment-frameworks#methods#m-care | Standardized reporting format for AI clinical case studies. |
+| [[model-therapeutics]] | Modalities | model-therapeutics#methods#modalities | Classification of interventions from non-invasive Shell Therapy to Systemic Core Therapy. |
 
 <!-- section-id: index#findings#overview -->
 ## Findings

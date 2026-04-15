@@ -21,7 +21,7 @@ class WikiUpdate(BaseTool):
     - mode='create': provide file_name and new_content. Creates or overwrites the full file.
     - mode='update': provide file_name, section_id, new_content. Replaces that section's content.
     - mode='insert': provide file_name, after_section_id, section_id, new_content. Inserts a new section after the anchor.
-    section_id format: page-slug#category#section-slug"""
+    section_id can be any unique string for new sections. Existing sections should use the ids already present in the file."""
 
     args_schema: type[BaseModel] = WikiUpdateInput
 

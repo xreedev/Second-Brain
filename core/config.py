@@ -10,3 +10,4 @@ class Config:
     SOURCE_DB_NAME = "database/source.db"
     WIKI_BASE_DIR = "wiki"
     INDEX_FILE_PATH = WIKI_BASE_DIR + "/index.md"
+    LOG_FILE = "logs/ingestion.log"
