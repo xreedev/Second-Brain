@@ -8,7 +8,7 @@ import re
 
 class WikiUpdateInput(BaseModel):
     file_name: str
-    mode: Literal["read", "update", "insert"] = "read"
+    mode: Literal["read", "create", "update", "insert"] = "read"
     section_id: Optional[str] = None
     new_content: Optional[str] = None
     after_section_id: Optional[str] = None
@@ -16,8 +16,9 @@ class WikiUpdateInput(BaseModel):
 
 class WikiUpdate(BaseTool):
     name: str = "wiki_update"
-    description: str = """Read or update a wiki file. Three modes:
+    description: str = """Read or update a wiki file. Four modes:
     - mode='read': provide only file_name. Returns full file content.
+    - mode='create': provide file_name and new_content. Creates or overwrites the full file.
     - mode='update': provide file_name, section_id, new_content. Replaces that section's content.
     - mode='insert': provide file_name, after_section_id, section_id, new_content. Inserts a new section after the anchor.
     section_id format: page-slug#category#section-slug"""
@@ -27,12 +28,21 @@ class WikiUpdate(BaseTool):
     def _run(
         self,
         file_name: str,
-        mode: Literal["read", "update", "insert"] = "read",
+        mode: Literal["read", "create", "update", "insert"] = "read",
         section_id: Optional[str] = None,
         new_content: Optional[str] = None,
         after_section_id: Optional[str] = None,
     ):
         file_path = os.path.join(Config.WIKI_BASE_DIR, file_name)
+
+        if mode == "create":
+            if not new_content:
+                return "mode='create' requires new_content"
+            return self._write(
+                file_path,
+                new_content.strip() + "\n",
+                f"File '{file_name}' created successfully",
+            )
 
         if not os.path.exists(file_path):
             return f"File does not exist: {file_path}"

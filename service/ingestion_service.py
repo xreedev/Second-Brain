@@ -13,6 +13,32 @@ class IngestionService:
         self.vector_store = ChromaStore()
         self.wiki_agent_executor = get_wiki_maintainer_agent_executor()
 
+    def _ensure_index_exists(self):
+        if os.path.exists(Config.INDEX_FILE_PATH):
+            with open(Config.INDEX_FILE_PATH, "r", encoding="utf-8") as f:
+                current = f.read().strip()
+            if current:
+                return
+
+        with open(Config.INDEX_FILE_PATH, "w", encoding="utf-8") as f:
+            f.write(
+                """<!-- section-id: index#concepts#overview -->
+## Concepts
+| Page | Section | Section ID | Summary |
+|------|---------|------------|---------|
+
+<!-- section-id: index#methods#overview -->
+## Methods
+| Page | Section | Section ID | Summary |
+|------|---------|------------|---------|
+
+<!-- section-id: index#findings#overview -->
+## Findings
+| Page | Section | Section ID | Summary |
+|------|---------|------------|---------|
+"""
+            )
+
     async def ingest_pdf(self, pdf):
         source_id = f"{pdf.filename}-{uuid4().hex}"
         file_path = os.path.join(Config.UPLOAD_DIR, pdf.filename)
@@ -33,6 +59,7 @@ class IngestionService:
         self.vector_store.store_sections_in_chroma(sections)
         print("Sections stored in ChromaDB.")
 
+        self._ensure_index_exists()
         index_current = fetch_file_content(Config.INDEX_FILE_PATH)
         print("Current index file content:", index_current[:500])
 
@@ -40,6 +67,7 @@ class IngestionService:
             "pdf content: " + str(sections)
             + "\n\nindex file content: " + index_current
         )
-        self.wiki_agent_executor.run(prompt_text)
+        ingest_report = self.wiki_agent_executor.run(prompt_text)
+        print("Wiki ingest report:", ingest_report)
 
 
