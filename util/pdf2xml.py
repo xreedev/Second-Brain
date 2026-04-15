@@ -105,7 +105,7 @@ class ArxivParser:
 
         if output_format.lower() == "html":
             return self._to_html(meta, sections)
-        return self._to_xml(meta, sections)
+        return self.extract_sections_from_xml(self._to_xml(meta, sections))
 
     def extract_sections_from_xml(self, xml_data: str) -> list[dict]:
         root = ET.fromstring(xml_data)
