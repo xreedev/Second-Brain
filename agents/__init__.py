@@ -1,1 +1,0 @@
-from .wiki_maintainer import get_agent_executor as get_wiki_maintainer_agent_executor

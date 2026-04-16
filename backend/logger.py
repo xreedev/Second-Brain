@@ -1,0 +1,37 @@
+from datetime import datetime
+import os
+
+from core.config import Config
+
+
+def ingestion_logger(logs: str):
+    log_dir = os.path.dirname(Config.LOG_FILE)
+    if log_dir:
+        os.makedirs(log_dir, exist_ok=True)
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(Config.LOG_FILE, "a", encoding="utf-8") as f:
+        log_entry = f"[{timestamp}] [INFO] {logs}"
+        f.write(log_entry + "\n")
+
+
+def chat_logger(logs: str):
+    log_dir = os.path.dirname(Config.CHAT_LOG_FILE)
+    if log_dir:
+        os.makedirs(log_dir, exist_ok=True)
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(Config.CHAT_LOG_FILE, "a", encoding="utf-8") as f:
+        log_entry = f"[{timestamp}] [CHAT] {logs}"
+        f.write(log_entry + "\n")
+
+
+def chat_tool_logger(tool_name: str, inputs: str):
+    log_dir = os.path.dirname(Config.CHAT_TOOL_LOG_FILE)
+    if log_dir:
+        os.makedirs(log_dir, exist_ok=True)
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(Config.CHAT_TOOL_LOG_FILE, "a", encoding="utf-8") as f:
+        log_entry = f"[{timestamp}] [TOOL] {tool_name} input={inputs}"
+        f.write(log_entry + "\n")
