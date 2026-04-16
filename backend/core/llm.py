@@ -12,9 +12,9 @@ def get_llm():
     )
 
     llm_gpt = ChatOpenAI(
-        model="openai/gpt-4o-mini",   # or mistral, anthropic etc via gateway
+        model="openai/gpt-4o-mini",
         openai_api_key=Config.VERCEL_API_KEY,
-        openai_api_base="https://api.vercel.ai/v1"
+        openai_api_base="https://ai-gateway.vercel.sh/v1"
     )
 
-    return llm_gpt
+    return llm

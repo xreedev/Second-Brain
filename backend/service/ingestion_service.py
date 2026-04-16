@@ -26,8 +26,9 @@ class IngestionService:
 
 
     async def ingest_pdf(self, pdf):
+        print("Ingesting pdfffffff")
         self.log = ""
-        source_id = self.wiki_tracking_service.get_next_source_id()
+        source_id = self.db_service.create_source(pdf.filename)
         self.wiki_agent_executor = get_wiki_maintainer_agent_executor(source_id=source_id)
         self.log_info(f"Assigned source_id={source_id} for the new PDF.")
 

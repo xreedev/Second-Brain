@@ -1,3 +1,8 @@
-"Index of PDF Sections
-| Page | Section | Section ID | Summary |
-|------|---------|------------|---------|
+[
+  {
+    "id": "model-therapeutics-modalities",
+    "source_id": [
+      3
+    ]
+  }
+]

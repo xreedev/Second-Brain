@@ -100,20 +100,5 @@ class WikiTrackingService:
 
         return id_mapping
 
-    def get_next_source_id(self):
-        source_map = self.load_source_map()
-        if not source_map:
-            return "1"
-
-        numeric_ids = []
-        for source_id in source_map.keys():
-            if str(source_id).isdigit():
-                numeric_ids.append(int(source_id))
-
-        if not numeric_ids:
-            return "1"
-
-        return str(max(numeric_ids) + 1)
-
     def get_index_content(self):
         return fetch_file_content(Config.INDEX_FILE_PATH)
