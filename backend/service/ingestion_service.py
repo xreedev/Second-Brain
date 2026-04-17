@@ -4,7 +4,7 @@ from datetime import datetime
 from core.config import Config
 from agents import get_wiki_maintainer_agent_executor
 from database.sqllite_service import SQLiteService
-from service.wiki_tracking_service import WikiTrackingService
+from files_service import WikiTrackingService
 from vectorstores.chroma_store import ChromaStore
 from logger import ingestion_logger
 

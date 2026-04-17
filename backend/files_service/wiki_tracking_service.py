@@ -3,7 +3,7 @@ import os
 import re
 
 from core.config import Config
-from service.index_service import IndexService
+from files_service import IndexService
 from util import fetch_file_content
 
 

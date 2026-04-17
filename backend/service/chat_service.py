@@ -1,6 +1,6 @@
 from agents import get_wiki_process_agent
 from logger import chat_logger
-from service.wiki_tracking_service import WikiTrackingService
+from files_service import WikiTrackingService
 
 
 class ChatService:

@@ -7,7 +7,7 @@ from pydantic import BaseModel, PrivateAttr
 
 from core.config import Config
 from logger import chat_tool_logger
-from service.index_service import IndexService
+from files_service import IndexService
 
 
 class WikiSectionReadItem(BaseModel):

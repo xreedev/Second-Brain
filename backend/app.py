@@ -1,6 +1,5 @@
 from fastapi import FastAPI, File, UploadFile
-from service.chat_service import ChatService
-from service.ingestion_service import IngestionService
+from service import IngestionService, ChatService
 
 app = FastAPI()
 ingestion_service = IngestionService()
