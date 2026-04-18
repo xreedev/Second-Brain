@@ -10,10 +10,10 @@ class IndexService:
     # LOAD INDEX FILE (SAFE)
     # ----------------------------
     def _load_index(self):
-        if not os.path.exists(Config.INDEX_FILE_PATH):
+        if not os.path.exists(Config.INDEX_JSON_FILE_PATH):
             return []
 
-        with open(Config.INDEX_FILE_PATH, "r", encoding="utf-8") as f:
+        with open(Config.INDEX_JSON_FILE_PATH, "r", encoding="utf-8") as f:
             content = f.read().strip()
 
             if not content:
@@ -29,12 +29,12 @@ class IndexService:
     # SAVE INDEX FILE (ATOMIC)
     # ----------------------------
     def _save_index(self, data):
-        temp_path = Config.INDEX_FILE_PATH + ".tmp"
+        temp_path = Config.INDEX_JSON_FILE_PATH + ".tmp"
 
         with open(temp_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
 
-        os.replace(temp_path, Config.INDEX_FILE_PATH)
+        os.replace(temp_path, Config.INDEX_JSON_FILE_PATH)
 
     # ----------------------------
     # EXTRACT SECTION IDS FROM CONTENT

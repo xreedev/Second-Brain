@@ -1,13 +1,21 @@
 from typing import List
 from langchain.tools import BaseTool
+from pydantic import BaseModel
 from core.config import Config
 import os
 
+
+class WikiReadInput(BaseModel):
+    files: List[str]
+
+
 class WikiRead(BaseTool):
     name: str = "wiki_read"
-    description: str = "Reads the content of a wiki file"
+    description: str = "Reads the content of a wiki file. Takes a list of filenames."
+    args_schema: type[BaseModel] = WikiReadInput
 
     def _run(self, files: List[str]) -> List[str]:
+        print(f"[TOOL] Reading wiki files - {len(files)} file(s)")
         contents = []
         for file_name in files:
             file_path = os.path.join(Config.WIKI_BASE_DIR, file_name)

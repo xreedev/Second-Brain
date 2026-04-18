@@ -6,22 +6,79 @@ from core.config import Config
 from files_service import IndexService
 from util import fetch_file_content
 
+_INDEX_HEADER = (
+    "# Wiki Index\n\n"
+    "| File | Section | Section ID | Summary |\n"
+    "|------|---------|------------|---------|"
+)
+
 
 class WikiTrackingService:
     def __init__(self):
         self.index_service = IndexService()
 
-    def ensure_index_exists(self):
-        if os.path.exists(Config.INDEX_FILE_PATH):
-            with open(Config.INDEX_FILE_PATH, "r", encoding="utf-8") as f:
-                current = f.read().strip()
-            if current:
-                return
+    # ── PUBLIC API ────────────────────────────────────────────────────────────
 
-        with open(Config.INDEX_FILE_PATH, "w", encoding="utf-8") as f:
-            f.write("""Index of PDF Sections
-| Page | Section | Section ID | Summary |
-|------|---------|------------|---------|""")
+    def initialize_if_empty(self):
+        """Create a default index.md only when the file is absent or blank."""
+        index_path = Config.INDEX_FILE_PATH
+        if os.path.exists(index_path):
+            with open(index_path, "r", encoding="utf-8") as f:
+                if f.read().strip():
+                    return  # already has content – leave it alone
+
+        os.makedirs(os.path.dirname(index_path), exist_ok=True)
+        with open(index_path, "w", encoding="utf-8") as f:
+            f.write(_INDEX_HEADER)
+
+    def add_index(self, file_name: str, sections: list[dict]):
+        """
+        Upsert index.md rows for *file_name*.
+
+        Each dict in *sections* must contain:
+            id          – section ID (string / int)
+            name        – section heading / title
+            description – short summary produced by the LLM
+
+        Existing rows for the same file are removed and replaced so that a
+        create-then-update cycle never produces duplicate rows.
+        """
+        self.initialize_if_empty()
+
+        index_path = Config.INDEX_FILE_PATH
+        with open(index_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        lines = content.split("\n")
+
+        # Drop every existing row that belongs to this file
+        lines = [ln for ln in lines if not ln.startswith(f"| {file_name} |")]
+
+        # Locate the table-header separator so we can insert right below it
+        insert_idx = next(
+            (i + 1 for i, ln in enumerate(lines) if re.match(r"^\|[-| ]+\|$", ln)),
+            len(lines),  # fallback: append at end
+        )
+
+        for section in sections:
+            row = (
+                f"| {file_name} "
+                f"| {section['name']} "
+                f"| {section['id']} "
+                f"| {section.get('description', '')} |"
+            )
+            lines.insert(insert_idx, row)
+            insert_idx += 1
+
+        with open(index_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines))
+
+    def read_full_index(self) -> str:
+        """Return the complete text of index.md, initialising it if necessary."""
+        self.initialize_if_empty()
+        return fetch_file_content(Config.INDEX_FILE_PATH)
+
+    # ── INTERNAL / UTILITY ────────────────────────────────────────────────────
 
     def load_source_map(self):
         return self.index_service.load()
@@ -99,6 +156,3 @@ class WikiTrackingService:
             self.index_service.remap_section_ids(id_mapping)
 
         return id_mapping
-
-    def get_index_content(self):
-        return fetch_file_content(Config.INDEX_FILE_PATH)

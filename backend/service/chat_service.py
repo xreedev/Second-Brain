@@ -11,12 +11,14 @@ class ChatService:
 
     def chat(self, query: str):
         try:
+            print(f"[CHAT] Processing user query")
             self.wiki_tracking_service.ensure_index_exists()
+            print(f"[CHAT] Index ensured to exist")
             prompt_text = f"user query: {query}"
-            self.logger(f"query={query}")
+            print(f"[CHAT] Running wiki process agent")
             result = self.wiki_process_agent.run(prompt_text)
-            self.logger(f"response={result}")
+            print(f"[CHAT] Agent completed")
             return result
         except Exception as e:
-            self.logger(f"error={e}")
+            print(f"[CHAT] Error: {e}")
             return "Error processing query."

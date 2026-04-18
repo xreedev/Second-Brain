@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement, tostring, indent
+from xml.sax.saxutils import escape
 from pypdf import PdfReader
 
 
@@ -82,13 +83,19 @@ class ArxivParser:
         output_format : str, optional
             Either ``"xml"`` or ``"html"``.
         """
+        print("[PDF] Loading PDF file")
         pdf_bytes, base_meta = self._load_pdf(source)
+        
+        print("[PDF] Extracting text lines from PDF")
         lines = self._extract_lines(pdf_bytes)
 
         if not lines:
             raise ValueError("No text could be extracted from the PDF.")
 
+        print(f"[PDF] Building sections from {len(lines)} extracted lines")
         sections = self._build_sections(lines)
+        
+        print(f"[PDF] Extracted {len(sections)} sections, parsing metadata")
         meta = self._extract_meta_from_preamble(sections, base_meta)
 
         if title:
@@ -105,10 +112,18 @@ class ArxivParser:
 
         if output_format.lower() == "html":
             return self._to_html(meta, sections)
+        
+        print("[PDF] Converting to XML format")
         return self.extract_sections_from_xml(self._to_xml(meta, sections))
 
     def extract_sections_from_xml(self, xml_data: str) -> list[dict]:
-        root = ET.fromstring(xml_data)
+        try:
+            root = ET.fromstring(xml_data)
+        except ET.ParseError as e:
+            print(f"[ERROR] XML parsing failed: {e}")
+            print(f"[ERROR] First 500 chars of XML: {xml_data[:500]}")
+            raise ValueError(f"Failed to parse PDF content into XML: {e}") from e
+        
         sections: list[dict] = []
         for sec in root.findall(".//section"):
             heading = sec.find("heading")
@@ -226,10 +241,15 @@ class ArxivParser:
         return sections
 
     def _clean_section_text(self, raw_lines: list[str]) -> str:
-        """Join lines, collapse hyphenated line-breaks, normalise whitespace."""
+        """Join lines, collapse hyphenated line-breaks, normalise whitespace, and remove invalid XML characters."""
         joined = " ".join(raw_lines)
         joined = re.sub(r"-\s+([a-z])", r"\1", joined)
         joined = re.sub(r" {2,}", " ", joined)
+        # Remove control characters that are invalid in XML (except tab, newline, carriage return)
+        joined = "".join(
+            c for c in joined
+            if ord(c) >= 32 or c in "\t\n\r"
+        )
         return joined.strip()
 
     def _to_xml(self, meta: dict, sections: list[dict]) -> str:
@@ -238,16 +258,19 @@ class ArxivParser:
         meta_el = SubElement(root, "metadata")
         for k, v in meta.items():
             el = SubElement(meta_el, k)
-            el.text = str(v)
+            # Ensure text is properly escaped
+            el.text = escape(str(v))
 
         body_el = SubElement(root, "body")
         for sec in sections:
             sec_el = SubElement(body_el, "section")
             sec_el.set("page", str(sec["page"]))
             heading_el = SubElement(sec_el, "heading")
-            heading_el.text = sec["heading"]
+            # Ensure heading is properly escaped
+            heading_el.text = escape(sec["heading"])
             content_el = SubElement(sec_el, "content")
-            content_el.text = self._clean_section_text(sec["lines"])
+            # Ensure content is properly escaped
+            content_el.text = escape(self._clean_section_text(sec["lines"]))
 
         indent(root, space="  ")
         return '<?xml version="1.0" encoding="utf-8"?>\n' + tostring(

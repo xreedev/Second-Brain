@@ -26,7 +26,6 @@ class IngestionService:
 
 
     async def ingest_pdf(self, pdf):
-        print("Ingesting pdfffffff")
         self.log = ""
         source_id = self.db_service.create_source(pdf.filename)
         self.wiki_agent_executor = get_wiki_maintainer_agent_executor(source_id=source_id)
@@ -49,8 +48,8 @@ class IngestionService:
         self.vector_store.store_sections_in_chroma(sections)
         self.log_info("Sections stored in ChromaDB.")
 
-        self.wiki_tracking_service.ensure_index_exists()
-        index_current = self.wiki_tracking_service.get_index_content()
+        self.wiki_tracking_service.initialize_if_empty()
+        index_current = self.wiki_tracking_service.read_full_index()
         self.log_info("Current index file content:", len(index_current), "characters.")
 
         prompt_text = (
@@ -58,7 +57,8 @@ class IngestionService:
             + "\n\ncurrent source_id: " + str(source_id)
             + "\n\nindex file content: " + index_current
         )
+        self.log_info("Running wiki maintainer agent to create wiki pages...")
         ingest_report = self.wiki_agent_executor.run(prompt_text)
-        self.log_info("Wiki ingest report:", ingest_report)
+        self.log_info("Wiki maintainer agent completed successfully.")
 
         self.logger(self.log.rstrip())

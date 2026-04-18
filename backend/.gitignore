@@ -1,5 +1,45 @@
-new_venv
-__pycache__/
+# Python
 *.pyc
-source/*
-logs
+__pycache__/
+*.egg-info/
+dist/
+build/
+.Python
+
+# Virtual Environments
+venv
+new_venv
+env
+ENV/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Project specific
+source/
+wiki/
+logs/
+*.log
+*.sqlite
+*.db
+uploads/
+
+# Database
+*.sqlite
+*.sqlite3
+*.db

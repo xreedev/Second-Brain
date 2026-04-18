@@ -1,7 +1,6 @@
 from langchain.tools import BaseTool
 
 from core.config import Config
-from logger import chat_tool_logger
 
 
 class IndexRead(BaseTool):
@@ -9,7 +8,7 @@ class IndexRead(BaseTool):
     description: str = "Reads the wiki index file index.md."
 
     def _run(self):
-        chat_tool_logger(self.name, "file_name=index.md")
+        print(f"[TOOL] Reading index file")
         try:
             with open(Config.INDEX_FILE_PATH, "r", encoding="utf-8") as f:
                 return f.read()

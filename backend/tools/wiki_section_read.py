@@ -1,12 +1,9 @@
 import os
 import re
 from typing import List
-
 from langchain.tools import BaseTool
 from pydantic import BaseModel, PrivateAttr
-
 from core.config import Config
-from logger import chat_tool_logger
 from files_service import IndexService
 
 
@@ -34,10 +31,7 @@ class WikiSectionRead(BaseTool):
         self._index_service = IndexService()
 
     def _run(self, requests: List[WikiSectionReadItem]):
-        chat_tool_logger(
-            self.name,
-            str([{"file_name": request.file_name, "section_id": request.section_id} for request in requests]),
-        )
+        print(f"[TOOL] Reading wiki sections - {len(requests)} request(s)")
         results = []
 
         for request in requests:
