@@ -5,11 +5,9 @@ from langchain.tools import BaseTool
 from pydantic import BaseModel, PrivateAttr
 
 from core.config import Config
-from files_service import IndexMapService
 
 
 class WikiSectionReadItem(BaseModel):
-    file_name: str
     section_id: str
 
 
@@ -20,70 +18,55 @@ class WikiSectionReadInput(BaseModel):
 class WikiSectionRead(BaseTool):
     name: str = "wiki_section_read"
     description: str = (
-        "Read one or more anchored wiki sections by file_name and section_id. "
-        "Provide requests as an array of {file_name, section_id} objects. "
-        "Returns an array with the matching section content for each request."
+        "Read wiki sections by section_id. "
+        "Returns section content."
     )
 
     args_schema: type[BaseModel] = WikiSectionReadInput
-    _index_service: IndexMapService = PrivateAttr()
 
-    def __init__(self, **kwargs):
+    _sections: list = PrivateAttr()
+
+    def __init__(self, sections: list, **kwargs):
         super().__init__(**kwargs)
-        self._index_service = IndexMapService()
+        self._sections = sections  
 
     def _run(self, requests: List[WikiSectionReadItem]):
-        print(f"[TOOL] Reading wiki sections - {len(requests)} request(s)")
+        print(f"[TOOL] Reading {len(requests)} section(s)")
 
         results = []
 
-        # 🔥 Load index ONCE (avoid repeated disk reads)
-        index_data = self._index_service.load()
+        file_path = Config.INDEX_FILE_PATH  # single file
+
+        if not os.path.exists(file_path):
+            return [{
+                "found": False,
+                "error": f"Index file missing"
+            }]
+
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
 
         for request in requests:
-            file_path = os.path.join(Config.WIKI_BASE_DIR, request.file_name)
+            section_id = str(request.section_id)
 
-            if not os.path.exists(file_path):
-                results.append({
-                    "file_name": request.file_name,
-                    "section_id": request.section_id,
-                    "found": False,
-                    "error": f"File does not exist: {file_path}",
-                })
-                continue
-
-            try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content = f.read()
-            except Exception as e:
-                results.append({
-                    "file_name": request.file_name,
-                    "section_id": request.section_id,
-                    "found": False,
-                    "error": f"Error reading file: {e}",
-                })
-                continue
-
-            section_content = self._extract_section(content, request.section_id)
+            section_content = self._extract_section(content, section_id)
 
             if section_content is None:
                 results.append({
-                    "file_name": request.file_name,
-                    "section_id": request.section_id,
+                    "section_id": section_id,
                     "found": False,
-                    "error": f"Section ID not found: {request.section_id}",
+                    "error": "Section not found"
                 })
                 continue
 
-            # ✅ Direct dict lookup (no service call per request)
-            source_ids = index_data.get(str(request.section_id), [])
+            # 🔥 Update agent state (this is YOUR goal)
+            if section_id not in self._sections:
+                self._sections.append(section_id)
 
             results.append({
-                "file_name": request.file_name,
-                "section_id": request.section_id,
+                "section_id": section_id,
                 "found": True,
-                "content": section_content,
-                "source_ids": source_ids,
+                "content": section_content
             })
 
         return results
@@ -105,6 +88,4 @@ class WikiSectionRead(BaseTool):
         if anchor_idx + 1 >= len(parts):
             return None
 
-        section_body = parts[anchor_idx + 1]
-
-        return section_body.strip()
+        return parts[anchor_idx + 1].strip()

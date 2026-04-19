@@ -45,3 +45,22 @@ class ChromaStore:
             n_results=2
         )
         return results["documents"]
+    
+    def query_by_text_and_source_ids(self, query: str, source_ids: list[str], n_results: int = 5):
+        """
+        Perform vector search for `query` but restrict results to given source_ids.
+        Returns top matching documents.
+        """
+
+        if not query or not source_ids:
+            return []
+
+        source_ids = [str(sid) for sid in source_ids]
+
+        results = self.collection.query(
+          query_texts=[query],
+          n_results=n_results,
+          where={"sourceid": {"$in": source_ids}}
+        )
+
+        return results.get("documents", [])

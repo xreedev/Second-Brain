@@ -102,6 +102,34 @@ class SQLiteService:
         print(f"Stored {len(normalized_sections)} sections for source_id={source_id}")
 
 
+    def get_source_files_by_section_ids(self, section_ids):
+        """
+        Given a list of section IDs (documents.id),
+        return unique source file names.
+        """
+
+        if not section_ids:
+           return []
+
+        # Normalize to integers
+        section_ids = [int(sid) for sid in section_ids]
+
+        placeholders = ",".join("?" for _ in section_ids)
+
+        query = f"""
+        SELECT DISTINCT s.file_name
+        FROM documents d
+        JOIN source s ON d.sourceid = s.id
+        WHERE d.id IN ({placeholders})
+        """
+
+        self.cursor.execute(query, section_ids)
+
+        results = self.cursor.fetchall()
+
+        return [row["file_name"] for row in results]
+
+
     # ----------------------------
     # GET SECTIONS
     # ----------------------------
