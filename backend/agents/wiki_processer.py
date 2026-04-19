@@ -2,7 +2,7 @@ from langchain.agents import create_agent
 
 from core.llm import get_llm
 from prompts import WIKI_PROCESS_PROMPT
-from tools import IndexRead, WikiRead, WikiSectionRead, WikiBatch
+from tools import IndexRead, WikiSectionRead
 
 
 class WikiProcessAgent:
