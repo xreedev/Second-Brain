@@ -3,6 +3,7 @@ import re
 from typing import List
 from langchain.tools import BaseTool
 from pydantic import BaseModel, PrivateAttr
+from files_service import IndexMapService
 
 from core.config import Config
 
@@ -29,6 +30,7 @@ class WikiSectionRead(BaseTool):
     def __init__(self, sections: list, **kwargs):
         super().__init__(**kwargs)
         self._sections = sections  
+        self._index_service = IndexMapService()
 
     def _run(self, requests: List[WikiSectionReadItem]):
         print(f"[TOOL] Reading {len(requests)} section(s)")
@@ -48,8 +50,8 @@ class WikiSectionRead(BaseTool):
 
         for request in requests:
             section_id = str(request.section_id)
-
-            section_content = self._extract_section(content, section_id)
+            self._sections.append(section_id)  
+            section_content = self._extract_section(section_id)
 
             if section_content is None:
                 results.append({
@@ -59,10 +61,6 @@ class WikiSectionRead(BaseTool):
                 })
                 continue
 
-            # 🔥 Update agent state (this is YOUR goal)
-            if section_id not in self._sections:
-                self._sections.append(section_id)
-
             results.append({
                 "section_id": section_id,
                 "found": True,
@@ -71,7 +69,29 @@ class WikiSectionRead(BaseTool):
 
         return results
 
-    def _extract_section(self, content: str, section_id: str):
+    def _extract_section(self, section_id: str):
+        index_data = self._index_service.load()
+
+        entry = index_data.get(str(section_id))
+        if not entry:
+            return None
+
+        file_name = entry.get("file_name")
+        if not file_name:
+            return None
+
+        file_path = os.path.join(Config.WIKI_BASE_DIR, file_name)
+
+        if not os.path.exists(file_path):
+            return None
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+        except Exception:
+            return None
+
+        # 🔍 Extract section from file
         anchor = f"<!-- section-id: {section_id} -->"
 
         if anchor not in content:
