@@ -8,7 +8,7 @@ API_KEY = Config.GEMINI_API_KEY
 def get_llm():
 
     llm_gemini = ChatGoogleGenerativeAI(
-        model="gemini-3-flash-preview",
+        model="gemini-2.5-flash",
         google_api_key=API_KEY
     )
 
