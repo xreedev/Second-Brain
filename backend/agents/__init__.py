@@ -1,0 +1,2 @@
+from .wiki_maintainer import get_agent_executor as get_wiki_maintainer_agent_executor
+from .wiki_processer import get_agent as get_wiki_process_agent

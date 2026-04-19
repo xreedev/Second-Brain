@@ -1,3 +1,45 @@
+# Python
 venv
-__pycache__
+new_venv
+env
+*.pyc
+__pycache__/
+*.egg-info/
+dist/
+build/
+.Python
+
+# Environment
 .env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+wiki/*
+source/*
+logs/
+*.log
+*.sqlite
+*.db
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+
+# Frontend
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
