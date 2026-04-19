@@ -1,13 +1,13 @@
 from langchain.agents import create_agent
 from core.llm import get_llm
-from tools import IndexRead, WikiRead, WikiUpdate
+from tools import IndexRead, WikiRead, WikiBatch
 from prompts import WIKI_MAINTAINER_PROMPT
 
 
 class WikiMaintainerAgentExecutor:
     def __init__(self, source_id):
         llm = get_llm()
-        tools = [IndexRead(), WikiRead(), WikiUpdate(source_id=source_id)]
+        tools = [IndexRead(), WikiRead(), WikiBatch(source_id=source_id)]
         self._agent = create_agent(
             model=llm,
             tools=tools,

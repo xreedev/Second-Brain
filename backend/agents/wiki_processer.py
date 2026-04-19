@@ -2,13 +2,13 @@ from langchain.agents import create_agent
 
 from core.llm import get_llm
 from prompts import WIKI_PROCESS_PROMPT
-from tools import IndexRead, WikiRead, WikiSectionRead, WikiUpdate
+from tools import IndexRead, WikiRead, WikiSectionRead, WikiBatch
 
 
 class WikiProcessAgent:
     def __init__(self):
         llm = get_llm()
-        tools = [IndexRead(), WikiSectionRead(), WikiUpdate(source_id=0)]
+        tools = [IndexRead(), WikiSectionRead()]
         self._agent = create_agent(
             model=llm,
             tools=tools,
