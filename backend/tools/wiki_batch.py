@@ -66,6 +66,7 @@ class WikiBatch(BaseTool):
         for file_name, op in files.items():
             # Hard guard — never allow direct index writes
             if os.path.basename(file_name).lower() == "index.md":
+                print(f"[TOOL] wiki_batch – REJECTED index.md write attempt")
                 results.append(f"⚠  '{file_name}': REJECTED — index.md is system-managed.")
                 continue
 
@@ -76,14 +77,18 @@ class WikiBatch(BaseTool):
             sections = op.get("sections", [])
 
             if mode not in ("write", "update"):
+                print(f"[TOOL] wiki_batch – file: {file_name}, mode: {mode} INVALID")
                 results.append(
                     f"✗  '{file_name}': unknown mode '{mode}' — use 'write' or 'update'."
                 )
                 continue
 
+            print(f"[TOOL] wiki_batch – file: {file_name}, mode: {mode}, sections: {len(sections)}")
+
             worker = WikiUpdate(source_id=self._source_id)
             msg = worker._run(file_name, mode=mode, sections=sections)
-            status = "✗" if msg.startswith("Error") or msg.startswith("Aborted") else "✓"
+
+            status = "✗" if msg.startswith(("Error", "Aborted")) else "✓"
             results.append(f"{status}  '{file_name}' [{mode}]: {msg}")
 
         return "\n".join(results)
