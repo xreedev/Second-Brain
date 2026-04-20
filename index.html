@@ -1,610 +1,455 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Second Brain — by xreedev</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #0a0a0f;
-      --surface: #111118;
-      --surface2: #1a1a26;
-      --border: rgba(255,255,255,0.07);
-      --accent: #7c6af7;
-      --accent2: #4fc3f7;
-      --accent3: #a5f3a0;
-      --text: #e8e8f0;
-      --muted: #7a7a96;
-      --card: #13131e;
-      --glow: rgba(124,106,247,0.15);
-    }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 16px;
-      line-height: 1.7;
-      overflow-x: hidden;
-    }
-
-    /* ── NOISE TEXTURE ── */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0.4;
-    }
-
-    /* ── HERO ── */
-    .hero {
-      position: relative;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 6rem 2rem 4rem;
-      overflow: hidden;
-    }
-
-    .hero-bg {
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124,106,247,0.18) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 20% 80%, rgba(79,195,247,0.1) 0%, transparent 50%),
-        radial-gradient(ellipse 50% 30% at 80% 70%, rgba(165,243,160,0.07) 0%, transparent 50%);
-      pointer-events: none;
-    }
-
-    .hero-grid {
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-      background-size: 60px 60px;
-      pointer-events: none;
-      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
-    }
-
-    .eyebrow {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.75rem;
-      letter-spacing: 0.2em;
-      color: var(--accent);
-      text-transform: uppercase;
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      animation: fadeUp 0.6s ease both;
-    }
-
-    .eyebrow::before, .eyebrow::after {
-      content: '';
-      display: block;
-      width: 40px;
-      height: 1px;
-      background: var(--accent);
-      opacity: 0.5;
-    }
-
-    .hero-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: clamp(3rem, 8vw, 6.5rem);
-      line-height: 1.05;
-      letter-spacing: -0.02em;
-      margin-bottom: 0.5rem;
-      animation: fadeUp 0.7s 0.1s ease both;
-    }
-
-    .hero-title em {
-      font-style: italic;
-      color: var(--accent);
-    }
-
-    .hero-subtitle-line {
-      font-family: 'DM Serif Display', serif;
-      font-size: clamp(1rem, 2.5vw, 1.6rem);
-      color: var(--muted);
-      font-style: italic;
-      margin-bottom: 2rem;
-      animation: fadeUp 0.7s 0.15s ease both;
-    }
-
-    .hero-desc {
-      max-width: 560px;
-      color: var(--muted);
-      font-size: 1.05rem;
-      font-weight: 300;
-      margin-bottom: 2.5rem;
-      animation: fadeUp 0.7s 0.2s ease both;
-    }
-
-    .hero-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.6rem;
-      justify-content: center;
-      margin-bottom: 2.5rem;
-      animation: fadeUp 0.7s 0.25s ease both;
-    }
-
-    .badge {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.72rem;
-      padding: 0.35rem 0.85rem;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--muted);
-      letter-spacing: 0.05em;
-    }
-
-    .badge.accent { border-color: rgba(124,106,247,0.4); color: var(--accent); background: rgba(124,106,247,0.08); }
-    .badge.teal   { border-color: rgba(79,195,247,0.4);  color: var(--accent2); background: rgba(79,195,247,0.08); }
-    .badge.green  { border-color: rgba(165,243,160,0.4); color: var(--accent3); background: rgba(165,243,160,0.08); }
-
-    .hero-cta {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      justify-content: center;
-      animation: fadeUp 0.7s 0.3s ease both;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.8rem 1.8rem;
-      border-radius: 8px;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.82rem;
-      letter-spacing: 0.04em;
-      text-decoration: none;
-      transition: all 0.2s ease;
-      cursor: pointer;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-    }
-    .btn-primary:hover { background: #9580ff; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,106,247,0.35); }
-
-    .btn-ghost {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-    .btn-ghost:hover { border-color: rgba(255,255,255,0.2); background: var(--surface2); transform: translateY(-2px); }
-
-    /* ── SCROLL INDICATOR ── */
-    .scroll-hint {
-      position: absolute;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.5rem;
-      color: var(--muted);
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.15em;
-      animation: fadeUp 1s 0.8s ease both;
-    }
-
-    .scroll-line {
-      width: 1px;
-      height: 40px;
-      background: linear-gradient(to bottom, var(--accent), transparent);
-      animation: scrollPulse 2s infinite;
-    }
-
-    @keyframes scrollPulse {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 1; }
-    }
-
-    /* ── SECTIONS ── */
-    section { position: relative; z-index: 1; }
-
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 0 2rem;
-    }
-
-    .section-pad { padding: 6rem 0; }
-
-    .section-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.72rem;
-      letter-spacing: 0.2em;
-      color: var(--accent);
-      text-transform: uppercase;
-      margin-bottom: 0.75rem;
-    }
-
-    .section-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: clamp(2rem, 4vw, 3rem);
-      line-height: 1.15;
-      margin-bottom: 1rem;
-    }
-
-    .section-desc {
-      color: var(--muted);
-      font-size: 1rem;
-      max-width: 560px;
-      font-weight: 300;
-    }
-
-    /* ── DIVIDER ── */
-    .divider {
-      width: 100%;
-      height: 1px;
-      background: linear-gradient(to right, transparent, var(--border), transparent);
-    }
-
-    /* ── FEATURES ── */
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.25rem;
-      margin-top: 3rem;
-    }
-
-    .feature-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.75rem;
-      transition: all 0.25s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .feature-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at top left, var(--glow), transparent 60%);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .feature-card:hover { border-color: rgba(124,106,247,0.25); transform: translateY(-3px); }
-    .feature-card:hover::before { opacity: 1; }
-
-    .feature-icon {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .feature-name {
-      font-family: 'DM Sans', sans-serif;
-      font-weight: 600;
-      font-size: 1rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .feature-desc {
-      color: var(--muted);
-      font-size: 0.9rem;
-      line-height: 1.6;
-    }
-
-    /* ── TECH STACK ── */
-    .stack-section { background: var(--surface); }
-
-    .stack-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1rem;
-      margin-top: 3rem;
-    }
-
-    .stack-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.5rem;
-    }
-
-    .stack-layer {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.68rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 0.75rem;
-    }
-
-    .stack-name {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-
-    .stack-name.py { color: #3776AB; }
-    .stack-name.js { color: #F7DF1E; }
-    .stack-name.css { color: #1572B6; }
-
-    .stack-detail { color: var(--muted); font-size: 0.87rem; }
-
-    /* ── ARCHITECTURE ── */
-    .arch-block {
-      margin-top: 3rem;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .arch-header {
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .arch-dot { width: 10px; height: 10px; border-radius: 50%; }
-    .arch-dot.red   { background: #ff5f57; }
-    .arch-dot.amber { background: #febc2e; }
-    .arch-dot.green { background: #28c840; }
-
-    .arch-code {
-      padding: 1.75rem 2rem;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.82rem;
-      line-height: 1.85;
-      color: var(--muted);
-      overflow-x: auto;
-    }
-
-    .arch-code .dir  { color: var(--accent); }
-    .arch-code .file { color: var(--text); }
-    .arch-code .comment { color: #3f3f5a; }
-
-    /* ── API ── */
-    .api-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 2.5rem;
-      font-size: 0.9rem;
-    }
-
-    .api-table th {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.7rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      text-align: left;
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .api-table td {
-      padding: 0.85rem 1rem;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-      vertical-align: middle;
-    }
-
-    .api-table tr:hover td { background: var(--surface2); }
-
-    .method {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.72rem;
-      font-weight: 500;
-      padding: 0.2rem 0.55rem;
-      border-radius: 4px;
-      letter-spacing: 0.05em;
-    }
-
-    .method.GET    { background: rgba(79,195,247,0.12); color: var(--accent2); }
-    .method.POST   { background: rgba(165,243,160,0.12); color: var(--accent3); }
-    .method.DELETE { background: rgba(239,68,68,0.12); color: #f87171; }
-
-    .endpoint { font-family: 'DM Mono', monospace; font-size: 0.82rem; color: var(--text); }
-    .auth-yes { color: var(--accent3); }
-    .auth-no  { color: var(--muted); }
-
-    /* ── SETUP ── */
-    .steps { margin-top: 2.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
-
-    .step {
-      display: grid;
-      grid-template-columns: 48px 1fr;
-      gap: 1.25rem;
-      align-items: start;
-    }
-
-    .step-num {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: 1px solid rgba(124,106,247,0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.85rem;
-      color: var(--accent);
-      flex-shrink: 0;
-    }
-
-    .step-body {}
-    .step-title { font-weight: 600; margin-bottom: 0.5rem; }
-    .step-desc  { color: var(--muted); font-size: 0.9rem; margin-bottom: 0.75rem; }
-
-    .code-block {
-      background: #0d0d14;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem 1.25rem;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.8rem;
-      color: #a0a0c0;
-      overflow-x: auto;
-    }
-
-    .code-block .cmd { color: var(--accent3); }
-    .code-block .comment { color: #3a3a5a; }
-
-    /* ── AUTHOR ── */
-    .author-section { text-align: center; padding: 6rem 0; }
-
-    .author-name {
-      font-family: 'DM Serif Display', serif;
-      font-size: 2.5rem;
-      margin: 1rem 0 0.5rem;
-    }
-
-    .author-tagline {
-      color: var(--muted);
-      font-style: italic;
-      margin-bottom: 2rem;
-    }
-
-    .author-links { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-
-    /* ── FOOTER ── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 2rem;
-      text-align: center;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.72rem;
-      color: #3a3a5a;
-      letter-spacing: 0.08em;
-    }
-
-    /* ── ANIMATIONS ── */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .reveal {
-      opacity: 0;
-      transform: translateY(24px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
-    }
-
-    .reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    @media (max-width: 600px) {
-      .step { grid-template-columns: 1fr; }
-      .step-num { display: none; }
-      .api-table td:nth-child(4), .api-table th:nth-child(4) { display: none; }
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>episteme — LLM Wiki for arXiv Research</title>
+<meta name="description" content="An LLM-maintained knowledge wiki for arXiv papers. Every answer traced to its exact source passage."/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090b;--s1:#111116;--s2:#18181f;--s3:#1f1f2a;
+  --border:rgba(255,255,255,0.07);
+  --amber:#f59e0b;--amber2:#fbbf24;--amber-dim:rgba(245,158,11,.12);
+  --teal:#10b981;--teal-dim:rgba(16,185,129,.12);
+  --indigo:#818cf8;--indigo-dim:rgba(129,140,248,.12);
+  --red:#f87171;--red-dim:rgba(248,113,113,.1);
+  --text:#f1f0eb;--muted:#6b6877;--muted2:#4a4857;
+  --card:#0e0e14;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Lora',serif;font-size:16px;line-height:1.75;overflow-x:hidden}
+
+/* ── GRAIN ─────────────────────── */
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.018;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ── HERO ───────────────────────── */
+.hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:3rem;padding:5rem 5vw 4rem;position:relative;overflow:hidden;max-width:1200px;margin:0 auto}
+@media(max-width:860px){.hero{grid-template-columns:1fr;padding:5rem 5vw 3rem;text-align:center}}
+
+.hero-bg{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 60% 70% at 70% 40%,rgba(245,158,11,.06),transparent 60%),
+             radial-gradient(ellipse 40% 50% at 10% 80%,rgba(16,185,129,.04),transparent 50%)}
+.hero-grid{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);
+  background-size:60px 60px;
+  mask-image:radial-gradient(ellipse 100% 100% at 50% 50%,black 20%,transparent 80%)}
+
+.hero-left{position:relative;z-index:2}
+.hero-right{position:relative;z-index:2;display:flex;justify-content:center;align-items:center}
+@media(max-width:860px){.hero-right{order:-1;height:260px}}
+
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.2em;color:var(--amber);text-transform:uppercase;margin-bottom:1.25rem;display:flex;align-items:center;gap:.75rem;animation:up .5s ease both}
+@media(max-width:860px){.eyebrow{justify-content:center}}
+.eyebrow-line{display:block;width:32px;height:1px;background:var(--amber);opacity:.6}
+
+h1{font-family:'Playfair Display',serif;font-size:clamp(3rem,7vw,5.5rem);line-height:.95;letter-spacing:-.02em;margin-bottom:.75rem;animation:up .55s .05s ease both}
+h1 em{font-style:italic;color:var(--amber)}
+
+.hero-tagline{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--muted);margin-bottom:1.5rem;animation:up .55s .1s ease both}
+.hero-desc{font-size:.95rem;color:var(--muted);font-weight:400;line-height:1.85;max-width:480px;margin-bottom:2rem;animation:up .55s .15s ease both}
+@media(max-width:860px){.hero-desc{margin:0 auto 2rem}}
+.hero-desc strong{color:var(--text);font-weight:500}
+
+.hero-badges{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:2rem;animation:up .55s .2s ease both}
+@media(max-width:860px){.hero-badges{justify-content:center}}
+.hb{font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.28rem .7rem;border-radius:3px;border:1px solid var(--border);background:var(--s2);color:var(--muted);letter-spacing:.05em}
+.hb.a{border-color:rgba(245,158,11,.35);color:var(--amber);background:var(--amber-dim)}
+.hb.t{border-color:rgba(16,185,129,.35);color:var(--teal);background:var(--teal-dim)}
+.hb.i{border-color:rgba(129,140,248,.35);color:var(--indigo);background:var(--indigo-dim)}
+
+.cta{display:flex;gap:.75rem;flex-wrap:wrap;animation:up .55s .25s ease both}
+@media(max-width:860px){.cta{justify-content:center}}
+.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.7rem 1.5rem;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.05em;text-decoration:none;transition:all .2s;cursor:pointer}
+.btn-a{background:var(--amber);color:#1a0d00;border:none;font-weight:500}
+.btn-a:hover{background:var(--amber2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(245,158,11,.3)}
+.btn-b{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-b:hover{border-color:rgba(255,255,255,.2);background:var(--s2);transform:translateY(-2px)}
+
+/* ── CANVAS ─────────────────────── */
+#brainCanvas{width:100%;max-width:440px;aspect-ratio:1;border-radius:12px}
+@media(max-width:860px){#brainCanvas{max-width:260px;aspect-ratio:1}}
+
+/* ── SCROLL HINT ────────────────── */
+.scroll-hint{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.4rem;color:var(--muted2);font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.15em;animation:up 1s .8s ease both;z-index:2}
+.scroll-pulse{width:1px;height:32px;background:linear-gradient(var(--amber),transparent);animation:pulse 2.2s infinite}
+
+/* ── LAYOUT ─────────────────────── */
+.page{max-width:1100px;margin:0 auto;padding:0 5vw}
+.section{padding:5rem 0;position:relative;z-index:1}
+.section.alt{background:var(--s1)}
+.section-inner{max-width:1100px;margin:0 auto;padding:5rem 5vw}
+.divider{height:1px;background:linear-gradient(to right,transparent,var(--border),transparent)}
+.s-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.2em;color:var(--amber);text-transform:uppercase;margin-bottom:.6rem}
+.s-title{font-family:'Playfair Display',serif;font-size:clamp(1.9rem,3.5vw,2.6rem);line-height:1.1;margin-bottom:.9rem}
+.s-desc{color:var(--muted);font-size:.95rem;max-width:540px;line-height:1.8}
+
+/* ── CALLOUT ────────────────────── */
+.callout{border-left:3px solid var(--amber);background:var(--amber-dim);border-radius:0 6px 6px 0;padding:1.1rem 1.4rem;margin:2rem 0;font-size:.93rem;line-height:1.7}
+.callout strong{color:var(--amber)}
+
+/* ── PIPELINE SECTION ───────────── */
+.pipelines{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:2.5rem}
+@media(max-width:780px){.pipelines{grid-template-columns:1fr}}
+
+.pipeline{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.pipe-head{padding:.85rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.75rem}
+.pipe-method{font-family:'JetBrains Mono',monospace;font-size:.68rem;font-weight:500;padding:.22rem .55rem;border-radius:3px}
+.pm-post{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(16,185,129,.3)}
+.pipe-path{font-family:'JetBrains Mono',monospace;font-size:.82rem}
+.pipe-label{font-size:.78rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-left:auto}
+.pipe-body{padding:1.4rem 1.25rem}
+
+/* ── FLOW STEPS ─────────────────── */
+.flow{display:flex;flex-direction:column;gap:0}
+.fstep{display:flex;align-items:flex-start;gap:.85rem;padding:.75rem;border-radius:6px;position:relative}
+.fstep:not(:last-child)::after{content:'';position:absolute;bottom:0;left:1.6rem;width:1px;height:100%;transform:translateY(50%);background:var(--border);z-index:0}
+.ficon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;position:relative;z-index:1}
+.fi-amber{background:var(--amber-dim);border:1px solid rgba(245,158,11,.3)}
+.fi-teal {background:var(--teal-dim);border:1px solid rgba(16,185,129,.3)}
+.fi-indigo{background:var(--indigo-dim);border:1px solid rgba(129,140,248,.3)}
+.fi-red{background:var(--red-dim);border:1px solid rgba(248,113,113,.3)}
+.fi-muted{background:var(--s3);border:1px solid var(--border)}
+.ftext{flex:1;padding-top:.2rem}
+.ftitle{font-size:.82rem;font-weight:500;font-family:'Lora',serif;margin-bottom:.2rem}
+.fdesc{font-size:.76rem;color:var(--muted);font-family:'JetBrains Mono',monospace;line-height:1.6}
+.fdesc .k{color:var(--text)}
+.fdesc .a{color:var(--amber)}
+.fdesc .t{color:var(--teal)}
+.fdesc .i{color:var(--indigo)}
+.fdesc .r{color:var(--red)}
+.fstep.highlight{background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.12)}
+.fstep.highlight .ftitle{color:var(--amber)}
+
+/* ── STORAGE BADGES ─────────────── */
+.storage-badges{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem}
+.sb{font-family:'JetBrains Mono',monospace;font-size:.62rem;padding:.18rem .5rem;border-radius:3px;letter-spacing:.04em}
+.sb-sqlite{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.25);color:#93c5fd}
+.sb-chroma{background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.25);color:#fdba74}
+.sb-wiki{background:var(--teal-dim);border:1px solid rgba(16,185,129,.25);color:#6ee7b7}
+.sb-llm{background:var(--indigo-dim);border:1px solid rgba(129,140,248,.25);color:#c7d2fe}
+
+/* ── WIKI STRUCTURE ─────────────── */
+.wiki-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:2.5rem}
+@media(max-width:700px){.wiki-grid{grid-template-columns:1fr}}
+
+.wiki-file{background:var(--card);border:1px solid var(--border);border-radius:9px;overflow:hidden}
+.wf-head{padding:.8rem 1.1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem}
+.wf-dot{width:8px;height:8px;border-radius:50%}
+.wf-name{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--teal)}
+.wf-badge{font-family:'JetBrains Mono',monospace;font-size:.6rem;padding:.15rem .5rem;border-radius:2px;margin-left:auto}
+.wf-md{background:var(--teal-dim);border:1px solid rgba(16,185,129,.25);color:var(--teal)}
+.wf-json{background:var(--amber-dim);border:1px solid rgba(245,158,11,.25);color:var(--amber)}
+.wf-body{padding:1.25rem 1.1rem}
+.wf-desc{font-size:.8rem;color:var(--muted);margin-bottom:1rem;line-height:1.6}
+.code-scroll{overflow-x:auto}
+.code-inline{font-family:'JetBrains Mono',monospace;font-size:.72rem;line-height:1.9;color:var(--muted);white-space:pre}
+.code-inline .sec-id{color:var(--amber)}
+.code-inline .sec-h2{color:var(--indigo)}
+.code-inline .sec-src{color:var(--teal)}
+.code-inline .sec-desc{color:var(--text)}
+.code-inline .jk{color:var(--indigo)}
+.code-inline .jv{color:var(--teal)}
+.code-inline .jp{color:var(--muted)}
+
+/* ── CODE BLOCK ─────────────────── */
+.codeblock{background:#06060a;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-top:1.5rem}
+.cb-head{padding:.6rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.45rem}
+.cbl{width:9px;height:9px;border-radius:50%}
+.cbl-r{background:#ff5f57}.cbl-a{background:#febc2e}.cbl-g{background:#28c840}
+.cb-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);margin-left:.5rem}
+.cb-body{padding:1.4rem;font-family:'JetBrains Mono',monospace;font-size:.75rem;line-height:2;overflow-x:auto;color:var(--muted)}
+.cb-body .dir{color:var(--amber)}
+.cb-body .f{color:var(--text)}
+.cb-body .cm{color:#2d2d40}
+.cb-body .cmd{color:var(--teal)}
+.cb-body .str{color:var(--indigo)}
+.cb-body .kw{color:var(--amber)}
+.cb-body .num{color:var(--red)}
+
+/* ── DIFF TABLE ─────────────────── */
+.diff-wrap{overflow-x:auto;margin-top:2.5rem}
+.diff-table{width:100%;border-collapse:collapse;font-size:.87rem;min-width:600px}
+.diff-table th{font-family:'JetBrains Mono',monospace;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;padding:.75rem 1rem;border-bottom:1px solid var(--border)}
+.diff-table td{padding:.8rem 1rem;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:top;color:var(--muted);font-size:.85rem}
+.diff-table tr:hover td{background:var(--s2)}
+.diff-table td:first-child{font-family:'Lora',serif;color:var(--text);font-weight:500}
+.bad{color:#ef4444;opacity:.75}
+.good{color:var(--teal)}
+
+/* ── METADATA BOX ───────────────── */
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:2rem}
+@media(max-width:640px){.meta-grid{grid-template-columns:1fr}}
+.meta-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.25rem}
+.meta-label{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem}
+.meta-val{font-family:'JetBrains Mono',monospace;font-size:.95rem;color:var(--amber)}
+.meta-desc{font-size:.82rem;color:var(--text);line-height:1.6;font-style:italic}
+.meta-chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.25rem}
+.chip{font-family:'JetBrains Mono',monospace;font-size:.62rem;padding:.2rem .55rem;border-radius:3px;background:var(--s2);border:1px solid var(--border);color:var(--muted)}
+.chip.k{border-color:rgba(245,158,11,.3);color:var(--amber)}
+.chip.t{border-color:rgba(16,185,129,.3);color:var(--teal)}
+
+/* ── SETUP STEPS ────────────────── */
+.steps{display:flex;flex-direction:column;gap:1.1rem;margin-top:2rem}
+.step{display:grid;grid-template-columns:40px 1fr;gap:1rem;align-items:start}
+@media(max-width:480px){.step{grid-template-columns:1fr}}
+.step-n{width:40px;height:40px;border-radius:50%;border:1px solid rgba(245,158,11,.3);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--amber);flex-shrink:0}
+@media(max-width:480px){.step-n{display:none}}
+.step-t{font-size:.9rem;font-weight:500;margin-bottom:.35rem;font-family:'Lora',serif}
+.step-d{color:var(--muted);font-size:.8rem;margin-bottom:.6rem}
+.cb2{background:#06060a;border:1px solid var(--border);border-radius:5px;padding:.8rem 1rem;font-family:'JetBrains Mono',monospace;font-size:.72rem;line-height:1.85;color:var(--muted);overflow-x:auto}
+.cb2 .c{color:#2d2d40}.cb2 .kw{color:var(--teal)}.cb2 .str{color:var(--indigo)}.cb2 .cmd{color:var(--amber)}
+ic{font-family:'JetBrains Mono',monospace;font-size:.82em;background:var(--s2);border:1px solid var(--border);padding:.1em .35em;border-radius:2px}
+
+/* ── AUTHOR ─────────────────────── */
+.author-section{text-align:center;padding:5rem 0}
+.author-name{font-family:'Playfair Display',serif;font-size:2.6rem;margin:.75rem 0 .4rem}
+.author-sub{color:var(--muted);font-style:italic;font-family:'Playfair Display',serif;margin-bottom:1.75rem}
+.author-links{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap}
+.author-note{margin-top:1.5rem;color:var(--muted2);font-size:.82rem}
+.author-note a{color:var(--amber);text-decoration:none}
+.author-note a:hover{text-decoration:underline}
+
+footer{border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:#2d2d3f;letter-spacing:.1em}
+
+/* ── ANIMATIONS ─────────────────── */
+@keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:.2}50%{opacity:1}}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .5s ease,transform .5s ease}
+.reveal.in{opacity:1;transform:translateY(0)}
+</style>
 </head>
 <body>
 
+<!-- HERO BG -->
+<div class="hero-bg"></div>
+<div class="hero-grid"></div>
+
 <!-- ── HERO ── -->
-<section class="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-grid"></div>
-
-  <div class="eyebrow">Full-Stack Project · Python &amp; JavaScript</div>
-
-  <h1 class="hero-title">Second <em>Brain</em></h1>
-  <p class="hero-subtitle-line">Your personal knowledge operating system.</p>
-
-  <p class="hero-desc">
-    Capture ideas, save links, and organize knowledge — then retrieve
-    exactly what you need, when you need it. Built with a clean Python
-    backend and a lightweight JavaScript frontend.
-  </p>
-
-  <div class="hero-badges">
-    <span class="badge accent">Python</span>
-    <span class="badge teal">JavaScript ES6+</span>
-    <span class="badge">CSS3</span>
-    <span class="badge green">REST API</span>
-    <span class="badge">JWT Auth</span>
-    <span class="badge">Full-Stack</span>
+<div class="hero">
+  <div class="hero-left">
+    <div class="eyebrow"><span class="eyebrow-line"></span>Karpathy LLM Wiki Pattern<span class="eyebrow-line"></span></div>
+    <h1>epis<em>teme</em></h1>
+    <p class="hero-tagline">An LLM-maintained wiki for arXiv papers.</p>
+    <p class="hero-desc">
+      Ingests PDFs into a <strong>self-maintaining markdown knowledge base</strong> — section by section, with full source tracking.
+      Every answer is traced back to the <strong>exact passage</strong> in the original paper that produced it.
+    </p>
+    <div class="hero-badges">
+      <span class="hb a">Python</span>
+      <span class="hb t">ChromaDB</span>
+      <span class="hb i">SQLite</span>
+      <span class="hb">Markdown Wiki</span>
+      <span class="hb a">Source Tracing</span>
+      <span class="hb t">arXiv</span>
+    </div>
+    <div class="cta">
+      <a href="https://github.com/xreedev/Second-Brain" class="btn btn-a" target="_blank">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        View on GitHub
+      </a>
+      <a href="#pipelines" class="btn btn-b">How it works →</a>
+    </div>
   </div>
 
-  <div class="hero-cta">
-    <a href="https://github.com/xreedev/Second-Brain" class="btn btn-primary" target="_blank">
-      <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-      View on GitHub
-    </a>
-    <a href="#setup" class="btn btn-ghost">
-      Get Started →
-    </a>
+  <div class="hero-right">
+    <canvas id="brainCanvas"></canvas>
   </div>
 
   <div class="scroll-hint">
     <span>SCROLL</span>
-    <div class="scroll-line"></div>
+    <div class="scroll-pulse"></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ── THE IDEA ── -->
+<section class="section">
+  <div class="page reveal">
+    <p class="s-label">Background</p>
+    <h2 class="s-title">Karpathy's LLM Wiki, for research</h2>
+    <p class="s-desc">In April 2026, Andrej Karpathy shared a pattern that went viral in the AI community.</p>
+
+    <div class="callout" style="margin-top:2rem;max-width:700px">
+      <strong>The core idea:</strong> Instead of re-reading raw documents every time you ask a question (RAG), have the LLM <em>compile</em> sources into a structured markdown wiki at ingest time. Knowledge accumulates. The LLM is the librarian.
+    </div>
+
+    <p style="margin-top:1.5rem;color:var(--muted);font-size:.93rem;max-width:640px;line-height:1.85">
+      episteme implements this for academic papers and adds a source tracing layer: after answering from the wiki, it embeds the response and vector-searches the original source sections — returning the exact passages that produced the answer. Every claim is auditable.
+    </p>
   </div>
 </section>
 
 <div class="divider"></div>
 
-<!-- ── FEATURES ── -->
-<section class="section-pad">
-  <div class="container">
+<!-- ── PIPELINES ── -->
+<section class="section alt" id="pipelines">
+  <div class="section-inner">
     <div class="reveal">
-      <p class="section-label">Capabilities</p>
-      <h2 class="section-title">Built for how you think</h2>
-      <p class="section-desc">Everything you need to stop losing ideas and start building on them.</p>
+      <p class="s-label">System Design</p>
+      <h2 class="s-title">Two pipelines</h2>
+      <p class="s-desc">Two POST endpoints. The ingest pipeline builds the wiki. The chat pipeline queries it and traces the answer back to the source.</p>
     </div>
 
-    <div class="features-grid">
-      <div class="feature-card reveal">
-        <div class="feature-icon">📝</div>
-        <div class="feature-name">Content Capture</div>
-        <div class="feature-desc">Save notes, URLs, and ideas in a structured format — ready to find later without sifting through tabs.</div>
+    <div class="pipelines reveal">
+
+      <!-- INGEST -->
+      <div class="pipeline">
+        <div class="pipe-head">
+          <span class="pipe-method pm-post">POST</span>
+          <span class="pipe-path">/ingest</span>
+          <span class="pipe-label">arXiv PDF → wiki</span>
+        </div>
+        <div class="pipe-body">
+          <div class="flow">
+
+            <div class="fstep">
+              <div class="ficon fi-amber">📄</div>
+              <div class="ftext">
+                <div class="ftitle">PDF Uploaded</div>
+                <div class="fdesc"><span class="k">arXiv PDF</span> received via multipart form</div>
+              </div>
+            </div>
+
+            <div class="fstep">
+              <div class="ficon fi-muted">✂️</div>
+              <div class="ftext">
+                <div class="ftitle">Section Splitter</div>
+                <div class="fdesc">Splits into logical sections<br/>
+                  <span class="k">{ section_id, title, text, source_file }</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="fstep">
+              <div class="ficon fi-teal">🗄️</div>
+              <div class="ftext">
+                <div class="ftitle">Indexed to SQLite</div>
+                <div class="fdesc">
+                  <span class="a">section_id</span>, <span class="k">section_text</span>,<br/>
+                  <span class="k">section_title</span>, <span class="t">source_filename</span>
+                </div>
+                <div class="storage-badges" style="margin-top:.5rem"><span class="sb sb-sqlite">SQLite</span></div>
+              </div>
+            </div>
+
+            <div class="fstep">
+              <div class="ficon fi-indigo">🔷</div>
+              <div class="ftext">
+                <div class="ftitle">Embedded to ChromaDB</div>
+                <div class="fdesc">
+                  Vector embedding of <span class="k">section_text</span><br/>
+                  metadata: <span class="a">section_id</span>, <span class="t">source_filename</span>
+                </div>
+                <div class="storage-badges" style="margin-top:.5rem"><span class="sb sb-chroma">ChromaDB</span></div>
+              </div>
+            </div>
+
+            <div class="fstep highlight">
+              <div class="ficon fi-amber">🤖</div>
+              <div class="ftext">
+                <div class="ftitle">LLM Wiki Writer</div>
+                <div class="fdesc">
+                  For each section from the paper:<br/>
+                  1. Check <span class="t">wiki/index.md</span> — page exists?<br/>
+                  2. Yes → retrieve section, update it<br/>
+                  &nbsp;&nbsp;&nbsp;No → create new wiki page + section<br/>
+                  3. Write <span class="a">section_id: desc</span> → <span class="t">index.md</span><br/>
+                  4. Write <span class="a">section_id: source_id</span> → <span class="t">index.json</span>
+                </div>
+                <div class="storage-badges" style="margin-top:.5rem">
+                  <span class="sb sb-wiki">wiki/*.md</span>
+                  <span class="sb sb-wiki">index.md</span>
+                  <span class="sb sb-wiki">index.json</span>
+                  <span class="sb sb-llm">LLM</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
-      <div class="feature-card reveal">
-        <div class="feature-icon">🏷️</div>
-        <div class="feature-name">Tagging System</div>
-        <div class="feature-desc">Attach flexible, multi-value tags to any entry. Group ideas across topics and contexts effortlessly.</div>
-      </div>
-      <div class="feature-card reveal">
-        <div class="feature-icon">🔍</div>
-        <div class="feature-name">Instant Search</div>
-        <div class="feature-desc">Full-text search across your entire knowledge base — find any note or link in milliseconds.</div>
-      </div>
-      <div class="feature-card reveal">
-        <div class="feature-icon">🔗</div>
-        <div class="feature-name">Public Sharing</div>
-        <div class="feature-desc">Generate a unique shareable link to let others browse your curated knowledge collection.</div>
-      </div>
-      <div class="feature-card reveal">
-        <div class="feature-icon">🔐</div>
-        <div class="feature-name">Secure Auth</div>
-        <div class="feature-desc">JWT-based stateless authentication keeps your data private with industry-standard security.</div>
-      </div>
-      <div class="feature-card reveal">
-        <div class="feature-icon">📱</div>
-        <div class="feature-name">Responsive UI</div>
-        <div class="feature-desc">A CSS-first responsive layout that feels at home on any screen size, from desktop to mobile.</div>
+
+      <!-- CHAT -->
+      <div class="pipeline">
+        <div class="pipe-head">
+          <span class="pipe-method pm-post">POST</span>
+          <span class="pipe-path">/chat</span>
+          <span class="pipe-label">query → answer + sources</span>
+        </div>
+        <div class="pipe-body">
+          <div class="flow">
+
+            <div class="fstep">
+              <div class="ficon fi-amber">💬</div>
+              <div class="ftext">
+                <div class="ftitle">User Query</div>
+                <div class="fdesc"><span class="k">{ "query": "How does X work?" }</span></div>
+              </div>
+            </div>
+
+            <div class="fstep">
+              <div class="ficon fi-teal">📖</div>
+              <div class="ftext">
+                <div class="ftitle">Wiki Section Retrieval</div>
+                <div class="fdesc">
+                  Search <span class="t">wiki/index.md</span> for relevant<br/>
+                  <span class="a">section_ids</span> + descriptions<br/>
+                  Fetch matching wiki page sections
+                </div>
+                <div class="storage-badges" style="margin-top:.5rem">
+                  <span class="sb sb-wiki">index.md</span>
+                  <span class="sb sb-wiki">wiki/*.md</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="fstep">
+              <div class="ficon fi-indigo">🤖</div>
+              <div class="ftext">
+                <div class="ftitle">LLM Answer Generation</div>
+                <div class="fdesc">
+                  Answer generated from wiki<br/>
+                  section context only
+                </div>
+                <div class="storage-badges" style="margin-top:.5rem"><span class="sb sb-llm">LLM</span></div>
+              </div>
+            </div>
+
+            <div class="fstep highlight">
+              <div class="ficon fi-amber">🔍</div>
+              <div class="ftext">
+                <div class="ftitle">Source Tracing</div>
+                <div class="fdesc">
+                  1. Lookup <span class="a">section_ids</span> → <span class="t">source_ids</span> via <span class="t">index.json</span><br/>
+                  2. Embed the LLM response<br/>
+                  3. Vector search in ChromaDB,<br/>
+                  &nbsp;&nbsp;&nbsp;scoped to <span class="t">those source papers only</span><br/>
+                  4. Return exact passages + similarity
+                </div>
+                <div class="storage-badges" style="margin-top:.5rem">
+                  <span class="sb sb-wiki">index.json</span>
+                  <span class="sb sb-chroma">ChromaDB</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="fstep">
+              <div class="ficon fi-teal">✅</div>
+              <div class="ftext">
+                <div class="ftitle">Response</div>
+                <div class="fdesc">
+                  <span class="k">answer</span> + <span class="t">[ { paper, section,</span><br/>
+                  <span class="t">passage, similarity } ]</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -612,138 +457,99 @@
 
 <div class="divider"></div>
 
-<!-- ── TECH STACK ── -->
-<section class="section-pad stack-section">
-  <div class="container">
+<!-- ── WIKI STRUCTURE ── -->
+<section class="section">
+  <div class="page">
     <div class="reveal">
-      <p class="section-label">Technology</p>
-      <h2 class="section-title">The stack</h2>
-      <p class="section-desc">Chosen for simplicity, performance, and zero unnecessary dependencies.</p>
+      <p class="s-label">Wiki Internals</p>
+      <h2 class="s-title">index.md &amp; index.json</h2>
+      <p class="s-desc">All reads and writes happen at the section level. These two index files are what let the system track exactly where every piece of knowledge came from.</p>
     </div>
 
-    <div class="stack-grid">
-      <div class="stack-card reveal">
-        <div class="stack-layer">Backend · 77.6%</div>
-        <div class="stack-name py">Python</div>
-        <div class="stack-detail">REST API server handling all business logic, authentication, and data persistence.</div>
+    <div class="wiki-grid reveal">
+      <div class="wiki-file">
+        <div class="wf-head">
+          <div class="wf-dot" style="background:var(--teal)"></div>
+          <span class="wf-name">wiki/index.md</span>
+          <span class="wf-badge wf-md">.md</span>
+        </div>
+        <div class="wf-body">
+          <p class="wf-desc">Human-readable. Maps every <code style="font-family:'JetBrains Mono',monospace;font-size:.85em">section_id</code> to a description of what that wiki section covers and which paper it came from. The LLM consults this on every ingest to decide whether to create a new section or update an existing one.</p>
+          <div class="code-scroll">
+            <pre class="code-inline">
+<span class="sec-h2">## </span><span class="sec-id">sec_001</span>
+<span class="sec-desc">Transformer architecture overview.</span>
+<span class="sec-desc">Encoder-decoder structure, self-attention.</span>
+<span class="sec-src">Source: attention_is_all_you_need.pdf</span>
+
+<span class="sec-h2">## </span><span class="sec-id">sec_002</span>
+<span class="sec-desc">Multi-head attention mechanism.</span>
+<span class="sec-desc">Parallel projection heads, concatenation.</span>
+<span class="sec-src">Source: attention_is_all_you_need.pdf</span>
+
+<span class="sec-h2">## </span><span class="sec-id">sec_003</span>
+<span class="sec-desc">BERT masked language modeling.</span>
+<span class="sec-desc">Pre-training objective, [MASK] token.</span>
+<span class="sec-src">Source: bert_pretraining.pdf</span></pre>
+          </div>
+        </div>
       </div>
-      <div class="stack-card reveal">
-        <div class="stack-layer">Frontend · 14.2%</div>
-        <div class="stack-name js">JavaScript</div>
-        <div class="stack-detail">Lightweight vanilla JS — no bloated frameworks. Fast, portable, dependency-free client.</div>
+
+      <div class="wiki-file">
+        <div class="wf-head">
+          <div class="wf-dot" style="background:var(--amber)"></div>
+          <span class="wf-name">wiki/index.json</span>
+          <span class="wf-badge wf-json">.json</span>
+        </div>
+        <div class="wf-body">
+          <p class="wf-desc">Machine-readable. Maps <code style="font-family:'JetBrains Mono',monospace;font-size:.85em">section_id → source_id</code> (source filename). Used by the chat pipeline's tracer to scope the ChromaDB vector search to only the papers that the retrieved wiki sections were compiled from.</p>
+          <div class="code-scroll">
+            <pre class="code-inline">
+<span class="jp">{</span>
+  <span class="jk">"sec_001"</span><span class="jp">:</span> <span class="jv">"attention_is_all_you_need.pdf"</span><span class="jp">,</span>
+  <span class="jk">"sec_002"</span><span class="jp">:</span> <span class="jv">"attention_is_all_you_need.pdf"</span><span class="jp">,</span>
+  <span class="jk">"sec_003"</span><span class="jp">:</span> <span class="jv">"bert_pretraining.pdf"</span><span class="jp">,</span>
+  <span class="jk">"sec_004"</span><span class="jp">:</span> <span class="jv">"bert_pretraining.pdf"</span><span class="jp">,</span>
+  <span class="jk">"sec_005"</span><span class="jp">:</span> <span class="jv">"gpt2_paper.pdf"</span><span class="jp">,</span>
+  <span class="jk">"sec_006"</span><span class="jp">:</span> <span class="jv">"attention_is_all_you_need.pdf"</span>
+<span class="jp">}</span></pre>
+          </div>
+        </div>
       </div>
-      <div class="stack-card reveal">
-        <div class="stack-layer">Styling · 7.9%</div>
-        <div class="stack-name css">CSS3</div>
-        <div class="stack-detail">Hand-crafted responsive styles using modern layout techniques — flexbox, grid, custom properties.</div>
-      </div>
-      <div class="stack-card reveal">
-        <div class="stack-layer">Auth</div>
-        <div class="stack-name" style="color: var(--accent);">JWT</div>
-        <div class="stack-detail">Stateless JSON Web Token authentication. Secure, scalable, and simple to integrate.</div>
-      </div>
+    </div>
+
+    <div class="callout reveal" style="max-width:700px;margin-top:2rem">
+      A wiki section can have <strong>multiple sources</strong>: if two papers both discuss attention mechanisms, <span style="font-family:'JetBrains Mono',monospace;font-size:.88em;color:var(--teal)">sec_002</span> in index.json maps to both. The tracer then searches ChromaDB against all of them.
     </div>
   </div>
 </section>
 
 <div class="divider"></div>
 
-<!-- ── ARCHITECTURE ── -->
-<section class="section-pad">
-  <div class="container">
+<!-- ── VS RAG ── -->
+<section class="section alt">
+  <div class="section-inner">
     <div class="reveal">
-      <p class="section-label">Structure</p>
-      <h2 class="section-title">Architecture</h2>
-      <p class="section-desc">Clean separation of concerns between the Python API server and the browser client.</p>
+      <p class="s-label">Comparison</p>
+      <h2 class="s-title">Why not just RAG?</h2>
+      <p class="s-desc">The difference is when the reasoning happens — at query time, or at ingest time.</p>
     </div>
 
-    <div class="arch-block reveal">
-      <div class="arch-header">
-        <div class="arch-dot red"></div>
-        <div class="arch-dot amber"></div>
-        <div class="arch-dot green"></div>
-      </div>
-      <div class="arch-code">
-<span class="dir">second-brain/</span>
-├── <span class="dir">backend/</span>                  <span class="comment"># Python REST API server</span>
-│   ├── <span class="file">app.py</span>                <span class="comment"># Application entry point</span>
-│   ├── <span class="dir">models/</span>               <span class="comment"># Data models &amp; schemas</span>
-│   ├── <span class="dir">routes/</span>               <span class="comment"># API route handlers</span>
-│   ├── <span class="dir">auth/</span>                 <span class="comment"># JWT authentication middleware</span>
-│   └── <span class="file">requirements.txt</span>      <span class="comment"># Python dependencies</span>
-│
-├── <span class="dir">frontend/</span>                 <span class="comment"># Client-side application</span>
-│   ├── <span class="file">index.html</span>            <span class="comment"># Application entry</span>
-│   ├── <span class="dir">src/</span>
-│   │   ├── <span class="file">app.js</span>            <span class="comment"># Core app logic</span>
-│   │   └── <span class="file">api.js</span>            <span class="comment"># API communication layer</span>
-│   └── <span class="dir">styles/</span>
-│       └── <span class="file">main.css</span>          <span class="comment"># Responsive styles</span>
-│
-└── <span class="file">.gitignore</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ── API ── -->
-<section class="section-pad stack-section">
-  <div class="container">
-    <div class="reveal">
-      <p class="section-label">API Reference</p>
-      <h2 class="section-title">Endpoints</h2>
-      <p class="section-desc">A clean REST API with consistent, predictable route patterns.</p>
-    </div>
-
-    <div class="reveal" style="overflow-x:auto; margin-top:2.5rem;">
-      <table class="api-table">
+    <div class="diff-wrap reveal">
+      <table class="diff-table">
         <thead>
           <tr>
-            <th>Method</th>
-            <th>Endpoint</th>
-            <th>Description</th>
-            <th>Auth</th>
+            <th>Property</th>
+            <th>Classic RAG</th>
+            <th>episteme (LLM Wiki)</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td><span class="method POST">POST</span></td>
-            <td><span class="endpoint">/api/auth/register</span></td>
-            <td style="color:var(--muted)">Create a new account</td>
-            <td><span class="auth-no">—</span></td>
-          </tr>
-          <tr>
-            <td><span class="method POST">POST</span></td>
-            <td><span class="endpoint">/api/auth/login</span></td>
-            <td style="color:var(--muted)">Authenticate &amp; get JWT</td>
-            <td><span class="auth-no">—</span></td>
-          </tr>
-          <tr>
-            <td><span class="method GET">GET</span></td>
-            <td><span class="endpoint">/api/content</span></td>
-            <td style="color:var(--muted)">Fetch all saved content</td>
-            <td><span class="auth-yes">✓</span></td>
-          </tr>
-          <tr>
-            <td><span class="method POST">POST</span></td>
-            <td><span class="endpoint">/api/content</span></td>
-            <td style="color:var(--muted)">Add new content</td>
-            <td><span class="auth-yes">✓</span></td>
-          </tr>
-          <tr>
-            <td><span class="method DELETE">DELETE</span></td>
-            <td><span class="endpoint">/api/content/:id</span></td>
-            <td style="color:var(--muted)">Remove a content item</td>
-            <td><span class="auth-yes">✓</span></td>
-          </tr>
-          <tr>
-            <td><span class="method GET">GET</span></td>
-            <td><span class="endpoint">/api/brain/share</span></td>
-            <td style="color:var(--muted)">Get public share link</td>
-            <td><span class="auth-yes">✓</span></td>
-          </tr>
+          <tr><td>Knowledge accumulation</td><td class="bad">None — every query starts fresh</td><td class="good">Wiki grows richer with each paper</td></tr>
+          <tr><td>Cross-paper synthesis</td><td class="bad">Chunks retrieved in isolation</td><td class="good">LLM links concepts at write time</td></tr>
+          <tr><td>Source attribution</td><td class="bad">Rough chunk-level</td><td class="good">Exact passage via post-answer trace</td></tr>
+          <tr><td>Self-maintenance</td><td class="bad">Passive — never improves</td><td class="good">LLM updates wiki on new ingests</td></tr>
+          <tr><td>Human readability</td><td class="bad">Raw chunks, not browsable</td><td class="good">Structured markdown you can read</td></tr>
         </tbody>
       </table>
     </div>
@@ -752,60 +558,190 @@
 
 <div class="divider"></div>
 
-<!-- ── SETUP ── -->
-<section class="section-pad" id="setup">
-  <div class="container">
+<!-- ── ARCHITECTURE ── -->
+<section class="section">
+  <div class="page">
     <div class="reveal">
-      <p class="section-label">Getting Started</p>
-      <h2 class="section-title">Run it locally</h2>
-      <p class="section-desc">Up and running in four steps. No exotic dependencies required.</p>
+      <p class="s-label">Structure</p>
+      <h2 class="s-title">Project layout</h2>
+    </div>
+
+    <div class="codeblock reveal">
+      <div class="cb-head">
+        <div class="cbl cbl-r"></div><div class="cbl cbl-a"></div><div class="cbl cbl-g"></div>
+      </div>
+      <div class="cb-body">
+<span class="dir">episteme/</span>
+├── <span class="dir">backend/</span>
+│   ├── <span class="f">app.py</span>                   <span class="cm"># POST /ingest, POST /chat</span>
+│   │
+│   ├── <span class="dir">ingest/</span>
+│   │   ├── <span class="f">pdf_splitter.py</span>      <span class="cm"># Section-aware PDF extraction</span>
+│   │   ├── <span class="f">section_store.py</span>     <span class="cm"># SQLite: section text + metadata</span>
+│   │   ├── <span class="f">vector_store.py</span>      <span class="cm"># ChromaDB: section embeddings</span>
+│   │   └── <span class="f">wiki_writer.py</span>       <span class="cm"># LLM wiki updater (section-level)</span>
+│   │
+│   ├── <span class="dir">chat/</span>
+│   │   ├── <span class="f">retriever.py</span>         <span class="cm"># wiki/index.md section lookup</span>
+│   │   ├── <span class="f">responder.py</span>         <span class="cm"># LLM answer from wiki context</span>
+│   │   └── <span class="f">tracer.py</span>            <span class="cm"># index.json → ChromaDB source trace</span>
+│   │
+│   ├── <span class="dir">wiki/</span>
+│   │   ├── <span class="f">index.md</span>             <span class="cm"># section_id → description</span>
+│   │   ├── <span class="f">index.json</span>           <span class="cm"># section_id → source_file</span>
+│   │   └── <span class="f">*.md</span>                 <span class="cm"># wiki pages (one per topic)</span>
+│   │
+│   └── <span class="f">requirements.txt</span>
+│
+└── <span class="dir">frontend/</span>                    <span class="cm"># Chat UI</span>
+    ├── <span class="f">index.html</span>
+    ├── <span class="dir">src/</span><span class="f">app.js</span>
+    └── <span class="dir">styles/</span><span class="f">main.css</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── API ── -->
+<section class="section alt">
+  <div class="section-inner">
+    <div class="reveal">
+      <p class="s-label">API Reference</p>
+      <h2 class="s-title">Two endpoints</h2>
+    </div>
+
+    <div style="display:grid;gap:1.4rem;margin-top:2rem">
+      <div class="codeblock reveal">
+        <div class="cb-head">
+          <div class="cbl cbl-r"></div><div class="cbl cbl-a"></div><div class="cbl cbl-g"></div>
+          <span class="cb-label">POST /ingest</span>
+        </div>
+        <div class="cb-body">
+<span class="cm"># request</span>
+<span class="cmd">curl</span> -X POST localhost:8000/ingest -F <span class="str">"file=@attention_is_all_you_need.pdf"</span>
+
+<span class="cm"># response</span>
+{
+  <span class="str">"status"</span>: <span class="str">"ok"</span>,
+  <span class="str">"paper"</span>: <span class="str">"attention_is_all_you_need.pdf"</span>,
+  <span class="str">"sections_indexed"</span>: <span class="num">12</span>,
+  <span class="str">"wiki_pages_updated"</span>: [<span class="str">"transformers.md"</span>, <span class="str">"attention_mechanism.md"</span>],
+  <span class="str">"new_sections"</span>: [<span class="str">"sec_041"</span>, <span class="str">"sec_042"</span>]
+}</div>
+      </div>
+
+      <div class="codeblock reveal">
+        <div class="cb-head">
+          <div class="cbl cbl-r"></div><div class="cbl cbl-a"></div><div class="cbl cbl-g"></div>
+          <span class="cb-label">POST /chat</span>
+        </div>
+        <div class="cb-body">
+<span class="cm"># request</span>
+<span class="cmd">curl</span> -X POST localhost:8000/chat \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{"query": "How does multi-head attention work?"}'</span>
+
+<span class="cm"># response</span>
+{
+  <span class="str">"answer"</span>: <span class="str">"Multi-head attention runs the attention function in parallel..."</span>,
+  <span class="str">"wiki_sections_used"</span>: [<span class="str">"sec_002"</span>, <span class="str">"sec_007"</span>],
+  <span class="str">"sources"</span>: [
+    {
+      <span class="str">"paper"</span>: <span class="str">"attention_is_all_you_need.pdf"</span>,
+      <span class="str">"section"</span>: <span class="str">"3.2 Multi-Head Attention"</span>,
+      <span class="str">"passage"</span>: <span class="str">"Instead of performing a single attention function..."</span>,
+      <span class="str">"similarity"</span>: <span class="num">0.94</span>
+    }
+  ]
+}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── SETUP ── -->
+<section class="section">
+  <div class="page">
+    <div class="reveal">
+      <p class="s-label">Quick Start</p>
+      <h2 class="s-title">Get running</h2>
     </div>
 
     <div class="steps">
       <div class="step reveal">
-        <div class="step-num">01</div>
-        <div class="step-body">
-          <div class="step-title">Clone the repository</div>
-          <div class="step-desc">Pull the code to your local machine.</div>
-          <div class="code-block"><span class="cmd">git</span> clone https://github.com/xreedev/Second-Brain.git
-<span class="cmd">cd</span> Second-Brain</div>
-        </div>
-      </div>
-
-      <div class="step reveal">
-        <div class="step-num">02</div>
-        <div class="step-body">
-          <div class="step-title">Set up the backend</div>
-          <div class="step-desc">Create a virtual environment and install Python dependencies.</div>
-          <div class="code-block"><span class="cmd">cd</span> backend
-python -m venv venv
-<span class="cmd">source</span> venv/bin/activate   <span class="comment"># Windows: venv\Scripts\activate</span>
+        <div class="step-n">01</div>
+        <div>
+          <div class="step-t">Clone &amp; set up</div>
+          <div class="cb2"><span class="cmd">git</span> clone https://github.com/xreedev/episteme.git
+<span class="cmd">cd</span> episteme/backend
+python -m venv venv && <span class="cmd">source</span> venv/bin/activate
 pip install -r requirements.txt</div>
         </div>
       </div>
-
       <div class="step reveal">
-        <div class="step-num">03</div>
-        <div class="step-body">
-          <div class="step-title">Configure environment</div>
-          <div class="step-desc">Create a <code style="font-family:'DM Mono',monospace;font-size:0.85em;">.env</code> file in the backend directory and set your secrets.</div>
-          <div class="code-block">SECRET_KEY=your_secret_key_here
-DATABASE_URL=your_database_url_here
-JWT_EXPIRY=3600</div>
+        <div class="step-n">02</div>
+        <div>
+          <div class="step-t">Configure <code style="font-family:'JetBrains Mono',monospace;font-size:.85em;background:var(--s2);border:1px solid var(--border);padding:.1em .3em;border-radius:2px">.env</code></div>
+          <div class="cb2">LLM_API_KEY=<span class="str">your_key</span>
+LLM_MODEL=<span class="str">gpt-4o</span>           <span class="c"># or claude-3-5-sonnet</span>
+CHROMA_PATH=<span class="str">./chroma_db</span>
+SQLITE_PATH=<span class="str">./sections.db</span>
+WIKI_PATH=<span class="str">./wiki</span></div>
         </div>
       </div>
-
       <div class="step reveal">
-        <div class="step-num">04</div>
-        <div class="step-body">
-          <div class="step-title">Start both servers</div>
-          <div class="step-desc">Run the backend, then open the frontend in your browser.</div>
-          <div class="code-block"><span class="comment"># Backend</span>
-python app.py                    <span class="comment"># → http://localhost:5000</span>
+        <div class="step-n">03</div>
+        <div>
+          <div class="step-t">Start the server &amp; ingest a paper</div>
+          <div class="cb2">python app.py                 <span class="c"># → localhost:8000</span>
 
-<span class="comment"># Frontend (new terminal)</span>
-<span class="cmd">cd</span> ../frontend
-python -m http.server 3000       <span class="comment"># → http://localhost:3000</span></div>
+<span class="cmd">curl</span> -X POST localhost:8000/ingest -F <span class="str">"file=@paper.pdf"</span>
+<span class="cmd">curl</span> -X POST localhost:8000/chat \
+  -d <span class="str">'{"query":"What does this paper contribute?"}'</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── METADATA ── -->
+<section class="section alt">
+  <div class="section-inner reveal">
+    <p class="s-label">GitHub Metadata</p>
+    <h2 class="s-title">Repo settings</h2>
+    <p class="s-desc">Chosen so developers who saw Karpathy's LLM Wiki idea find this project.</p>
+
+    <div class="meta-grid">
+      <div class="meta-card">
+        <div class="meta-label">Repo Name</div>
+        <div class="meta-val">episteme</div>
+      </div>
+      <div class="meta-card" style="grid-column:span 1">
+        <div class="meta-label">Description</div>
+        <div class="meta-desc">"LLM wiki for arXiv papers — ingests PDFs into a self-maintaining markdown knowledge base and traces every answer back to the exact source passage."</div>
+      </div>
+      <div class="meta-card" style="grid-column:1/-1">
+        <div class="meta-label">Topics</div>
+        <div class="meta-chips">
+          <span class="chip k">karpathy-llm-wiki</span>
+          <span class="chip k">llm-wiki</span>
+          <span class="chip">second-brain</span>
+          <span class="chip">arxiv</span>
+          <span class="chip t">source-attribution</span>
+          <span class="chip t">verifiable-ai</span>
+          <span class="chip">chromadb</span>
+          <span class="chip">sqlite</span>
+          <span class="chip">knowledge-base</span>
+          <span class="chip">research-assistant</span>
+          <span class="chip">pdf-ingestion</span>
+          <span class="chip">markdown-wiki</span>
+          <span class="chip">python</span>
+          <span class="chip">rag</span>
         </div>
       </div>
     </div>
@@ -815,34 +751,289 @@ python -m http.server 3000       <span class="comment"># → http://localhost:30
 <div class="divider"></div>
 
 <!-- ── AUTHOR ── -->
-<section class="author-section">
-  <div class="container reveal">
-    <p class="section-label" style="text-align:center;">Built by</p>
-    <h2 class="author-name">Sreedev</h2>
-    <p class="author-tagline">Building tools that make thinking easier.</p>
-    <div class="author-links">
-      <a href="https://github.com/xreedev" class="btn btn-ghost" target="_blank">
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-        @xreedev
-      </a>
-      <a href="https://github.com/xreedev/Second-Brain" class="btn btn-primary" target="_blank">
-        ⭐ Star on GitHub
-      </a>
-    </div>
+<section class="author-section reveal">
+  <p class="s-label" style="text-align:center">Built by</p>
+  <h2 class="author-name">Sreedev</h2>
+  <p class="author-sub">Building tools that make research tractable.</p>
+  <div class="author-links">
+    <a href="https://github.com/xreedev" class="btn btn-b" target="_blank">
+      <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      @xreedev
+    </a>
+    <a href="https://github.com/xreedev/Second-Brain" class="btn btn-a" target="_blank">⭐ Star on GitHub</a>
   </div>
+  <p class="author-note">Inspired by <a href="https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f" target="_blank">Andrej Karpathy's LLM Wiki gist</a></p>
 </section>
 
-<footer>
-  © 2025 XREEDEV · SECOND BRAIN · MIT LICENSE
-</footer>
+<footer>© 2025 XREEDEV · EPISTEME · MIT LICENSE</footer>
 
+<!-- ── BRAIN CANVAS ANIMATION ── -->
 <script>
-  // Scroll reveal
-  const observer = new IntersectionObserver(
-    (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
-    { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
-  );
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+(function() {
+  const canvas = document.getElementById('brainCanvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, dpr;
+
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    W = rect.width; H = rect.height;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+  }
+
+  // ── NODE POSITIONS (brain shape, 0-1 normalized) ──
+  const nodeData = [
+    // Left lobe
+    [.28,.25],[.20,.38],[.25,.50],[.18,.54],[.30,.62],[.23,.70],[.38,.55],[.33,.42],[.40,.30],
+    // Right lobe
+    [.72,.25],[.80,.38],[.75,.50],[.82,.54],[.70,.62],[.77,.70],[.62,.55],[.67,.42],[.60,.30],
+    // Corpus callosum (center bridge)
+    [.44,.40],[.50,.34],[.56,.40],
+    [.44,.55],[.50,.60],[.56,.55],
+    [.50,.47],
+  ];
+
+  let nodes = [];
+  let edges = [];
+  let papers = [];
+  let wikiPages = [];
+  let particles = [];
+
+  const AMBER = '#f59e0b';
+  const TEAL  = '#10b981';
+  const INDIGO= '#818cf8';
+  const DIM   = 'rgba(255,255,255,0.04)';
+
+  function buildNodes() {
+    nodes = nodeData.map(([nx, ny], i) => ({
+      x: nx * W, y: ny * H,
+      r: 2.5 + Math.random() * 1.5,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.4 + Math.random() * 0.8,
+      color: i < 9 ? AMBER : i < 18 ? TEAL : INDIGO,
+    }));
+  }
+
+  function buildEdges() {
+    edges = [];
+    const maxDist = W * 0.22;
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        if (Math.sqrt(dx*dx+dy*dy) < maxDist) {
+          edges.push({ a: i, b: j, particles: [] });
+        }
+      }
+    }
+  }
+
+  // ── PAPER FILE ICON ──
+  function makePaper() {
+    const side = Math.random() < 0.5 ? 'left' : 'top';
+    const tx = nodeData[Math.floor(Math.random() * 9)]; // left lobe target
+    return {
+      x: side === 'left' ? -30 : W * (.1 + Math.random() * .4),
+      y: side === 'left' ? H * (.2 + Math.random() * .6) : -30,
+      tx: tx[0] * W, ty: tx[1] * H,
+      w: 22, h: 28,
+      progress: 0, speed: 0.003 + Math.random() * 0.002,
+      alpha: 0, phase: Math.random() * Math.PI * 2,
+      done: false, fading: false, fadeAlpha: 1,
+    };
+  }
+
+  // ── WIKI PAGE ICON ──
+  function makeWiki() {
+    const srcNode = nodes[9 + Math.floor(Math.random() * 9)]; // right lobe
+    return {
+      x: srcNode ? srcNode.x : W * .7, y: srcNode ? srcNode.y : H * .5,
+      tx: W + 30,
+      ty: H * (.2 + Math.random() * .6),
+      w: 20, h: 26,
+      progress: 0, speed: 0.0025 + Math.random() * 0.002,
+      alpha: 0, fading: false, fadeAlpha: 1,
+    };
+  }
+
+  function drawPaperIcon(x, y, w, h, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const fold = 6;
+    ctx.fillStyle = 'rgba(245,158,11,0.12)';
+    ctx.strokeStyle = AMBER;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, y); ctx.lineTo(x + w - fold, y);
+    ctx.lineTo(x + w, y + fold); ctx.lineTo(x + w, y + h);
+    ctx.lineTo(x, y + h); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // fold crease
+    ctx.beginPath();
+    ctx.moveTo(x + w - fold, y); ctx.lineTo(x + w - fold, y + fold); ctx.lineTo(x + w, y + fold);
+    ctx.stroke();
+    // text lines
+    ctx.strokeStyle = 'rgba(245,158,11,0.4)';
+    ctx.lineWidth = 1;
+    for (let l = 0; l < 4; l++) {
+      const lw = l === 3 ? w * .5 : w * .65;
+      const ly = y + 10 + l * 4;
+      ctx.beginPath(); ctx.moveTo(x + 4, ly); ctx.lineTo(x + 4 + lw, ly); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawWikiIcon(x, y, w, h, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const fold = 5;
+    ctx.fillStyle = 'rgba(16,185,129,0.1)';
+    ctx.strokeStyle = TEAL;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, y); ctx.lineTo(x + w - fold, y);
+    ctx.lineTo(x + w, y + fold); ctx.lineTo(x + w, y + h);
+    ctx.lineTo(x, y + h); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + w - fold, y); ctx.lineTo(x + w - fold, y + fold); ctx.lineTo(x + w, y + fold);
+    ctx.stroke();
+    // MD badge
+    ctx.fillStyle = TEAL; ctx.globalAlpha = alpha * 0.7;
+    ctx.font = `bold ${Math.round(5 * dpr) / dpr}px JetBrains Mono, monospace`;
+    ctx.fillText('MD', x + 4, y + h - 5);
+    for (let l = 0; l < 3; l++) {
+      ctx.globalAlpha = alpha * 0.4;
+      ctx.strokeStyle = TEAL; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x + 4, y + 10 + l * 4); ctx.lineTo(x + w - 6, y + 10 + l * 4); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // ── PARTICLES ──
+  function spawnParticle(edgeIdx) {
+    const e = edges[edgeIdx];
+    const reverse = Math.random() < 0.5;
+    particles.push({
+      edgeIdx, t: reverse ? 1 : 0,
+      dir: reverse ? -1 : 1,
+      speed: 0.004 + Math.random() * 0.006,
+      color: nodes[e.a].color,
+      r: 1.5,
+    });
+  }
+
+  let t = 0;
+  let lastPaperSpawn = 0;
+  let lastWikiSpawn = 0;
+  let lastParticleSpawn = 0;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    t += 0.01;
+
+    // ── EDGES ──
+    edges.forEach(e => {
+      const na = nodes[e.a], nb = nodes[e.b];
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(na.x, na.y); ctx.lineTo(nb.x, nb.y); ctx.stroke();
+    });
+
+    // ── PARTICLES ──
+    if (t - lastParticleSpawn > 0.08 && edges.length > 0) {
+      spawnParticle(Math.floor(Math.random() * edges.length));
+      lastParticleSpawn = t;
+    }
+    particles = particles.filter(p => p.t >= 0 && p.t <= 1);
+    particles.forEach(p => {
+      p.t += p.dir * p.speed;
+      const e = edges[p.edgeIdx];
+      const na = nodes[e.a], nb = nodes[e.b];
+      const px = na.x + (nb.x - na.x) * p.t;
+      const py = na.y + (nb.y - na.y) * p.t;
+      ctx.beginPath();
+      ctx.arc(px, py, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = 0.7;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+
+    // ── NODES ──
+    nodes.forEach((n, i) => {
+      const pulse = 0.6 + 0.4 * Math.sin(t * n.speed + n.phase);
+      // glow
+      const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r * 6);
+      grad.addColorStop(0, n.color.replace(')', ',0.15)').replace('rgb','rgba').replace('#f59e0b','rgba(245,158,11,0.15)').replace('#10b981','rgba(16,185,129,0.1)').replace('#818cf8','rgba(129,140,248,0.1)'));
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = n.color === AMBER ? 'rgba(245,158,11,0.08)' : n.color === TEAL ? 'rgba(16,185,129,0.06)' : 'rgba(129,140,248,0.06)';
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r * 5 * pulse, 0, Math.PI * 2); ctx.fill();
+      // core
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r * pulse, 0, Math.PI * 2);
+      ctx.fillStyle = n.color; ctx.globalAlpha = 0.9; ctx.fill(); ctx.globalAlpha = 1;
+    });
+
+    // ── PAPER ICONS ──
+    if (t - lastPaperSpawn > 3 && papers.length < 3) {
+      papers.push(makePaper());
+      lastPaperSpawn = t;
+    }
+    papers = papers.filter(p => !p.done || p.fadeAlpha > 0);
+    papers.forEach(p => {
+      if (!p.done) {
+        p.progress = Math.min(1, p.progress + p.speed);
+        p.alpha = Math.min(0.85, p.alpha + 0.03);
+        const cx = p.x + (p.tx - p.x) * p.progress;
+        const cy = p.y + (p.ty - p.y) * p.progress;
+        drawPaperIcon(cx - p.w / 2, cy - p.h / 2, p.w, p.h, p.alpha);
+        if (p.progress >= 1) { p.done = true; }
+      } else {
+        p.fadeAlpha -= 0.025;
+        if (p.fadeAlpha > 0) drawPaperIcon(p.tx - p.w/2, p.ty - p.h/2, p.w, p.h, p.fadeAlpha * 0.4);
+      }
+    });
+
+    // ── WIKI ICONS ──
+    if (t - lastWikiSpawn > 4 && wikiPages.length < 2) {
+      if (nodes.length > 18) { wikiPages.push(makeWiki()); lastWikiSpawn = t; }
+    }
+    wikiPages = wikiPages.filter(p => !p.done || p.fadeAlpha > 0);
+    wikiPages.forEach(p => {
+      if (!p.done) {
+        p.progress = Math.min(1, p.progress + p.speed);
+        p.alpha = Math.min(0.85, p.alpha + 0.025);
+        const cx = p.x + (p.tx - p.x) * p.progress;
+        const cy = p.y + (p.ty - p.y) * p.progress;
+        drawWikiIcon(cx - p.w / 2, cy - p.h / 2, p.w, p.h, p.alpha);
+        if (p.progress >= 1) { p.done = true; }
+      } else {
+        p.fadeAlpha -= 0.02;
+        if (p.fadeAlpha > 0) drawWikiIcon(p.tx - p.w/2, p.ty - p.h/2, p.w, p.h, p.fadeAlpha * 0.3);
+      }
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  function init() {
+    resize();
+    buildNodes();
+    buildEdges();
+    draw();
+  }
+
+  window.addEventListener('resize', () => { resize(); buildNodes(); buildEdges(); });
+  init();
+})();
+
+// ── SCROLL REVEAL ──
+const obs = new IntersectionObserver(
+  es => es.forEach(e => { if (e.isIntersecting) e.target.classList.add('in') }),
+  { threshold: 0.07, rootMargin: '0px 0px -30px 0px' }
+);
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 </script>
 </body>
 </html>
