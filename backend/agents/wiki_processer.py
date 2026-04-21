@@ -9,12 +9,10 @@ class WikiProcessAgent:
     def __init__(self):
         self._llm = get_llm()
 
-    def run(self, prompt_text: str):
-        sections = []
-
+    def run(self, prompt_text: str, message_id: str):
         tools = [
             IndexRead(),
-            WikiSectionRead(sections=sections),
+            WikiSectionRead(message_id=message_id),
             WikiBatch(source_id="wiki_process_batch"),
         ]
 
@@ -32,13 +30,12 @@ class WikiProcessAgent:
 
         messages = result.get("messages", [])
         if not messages:
-            return {"text": "", "sections": []}
+            return {"text": ""}
 
         final_message = messages[-1]
 
         return {
             "text": getattr(final_message, "content", str(final_message)),
-            "sections": sections 
         }
 
 

@@ -4,7 +4,7 @@ from typing import List
 from langchain.tools import BaseTool
 from pydantic import BaseModel, PrivateAttr
 from files_service import IndexMapService
-
+from database.sqllite_service import SQLiteService
 from core.config import Config
 
 
@@ -25,54 +25,51 @@ class WikiSectionRead(BaseTool):
 
     args_schema: type[BaseModel] = WikiSectionReadInput
 
-    _sections: list = PrivateAttr()
+    _message_id: str = PrivateAttr()
+    _index_service: object = PrivateAttr()
 
-    def __init__(self, sections: list, **kwargs):
+    def __init__(self, message_id: str, **kwargs):
         super().__init__(**kwargs)
-        self._sections = sections  
+        self._message_id = message_id
         self._index_service = IndexMapService()
 
     def _run(self, requests: List[WikiSectionReadItem]):
-        print(f"[TOOL] Reading {len(requests)} section(s)")
+        print(f"[TOOL] Reading {len(requests)} section(s) for message_id={self._message_id}")
 
+        if not os.path.exists(Config.INDEX_FILE_PATH):
+            return [{"found": False, "error": "Index file missing"}]
+
+        db = SQLiteService()
         results = []
 
-        file_path = Config.INDEX_FILE_PATH  # single file
+        try:
+            for request in requests:
+                section_id = str(request.section_id)
 
-        if not os.path.exists(file_path):
-            return [{
-                "found": False,
-                "error": f"Index file missing"
-            }]
+                db.add_message_section(self._message_id, section_id)
 
-        with open(file_path, "r", encoding="utf-8") as f:
-            content = f.read()
+                section_content = self._extract_section(section_id)
 
-        for request in requests:
-            section_id = str(request.section_id)
-            self._sections.append(section_id)  
-            section_content = self._extract_section(section_id)
+                if section_content is None:
+                    results.append({
+                        "section_id": section_id,
+                        "found": False,
+                        "error": "Section not found",
+                    })
+                    continue
 
-            if section_content is None:
                 results.append({
                     "section_id": section_id,
-                    "found": False,
-                    "error": "Section not found"
+                    "found": True,
+                    "content": section_content,
                 })
-                continue
-
-            results.append({
-                "section_id": section_id,
-                "found": True,
-                "content": section_content
-            })
+        finally:
+            db.close()
 
         return results
 
     def _extract_section(self, section_id: str):
-        index_data = self._index_service.load()
-
-        entry = index_data.get(str(section_id))
+        entry = self._index_service.get_entry(str(section_id))
         if not entry:
             return None
 
@@ -91,7 +88,6 @@ class WikiSectionRead(BaseTool):
         except Exception:
             return None
 
-        # 🔍 Extract section from file
         anchor = f"<!-- section-id: {section_id} -->"
 
         if anchor not in content:

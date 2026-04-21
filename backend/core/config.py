@@ -9,6 +9,7 @@ class Config:
     CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
     UPLOAD_DIR = 'source'
     CHROMA_COLLECTION_NAME = "wiki_sections"
+    CHROMA_DB_PATH = "database/chroma_db"
     SOURCE_DB_NAME = "database/source.db"
     WIKI_BASE_DIR = "wiki"
     INDEX_FILE_PATH = WIKI_BASE_DIR + "/index.md"
