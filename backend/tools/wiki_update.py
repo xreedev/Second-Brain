@@ -214,24 +214,25 @@ class WikiUpdate(BaseTool):
         if not os.path.exists(file_path):
             return
 
-        with open(file_path, "r", encoding="utf-8") as f:
-            content = f.read()
+        existing_sections = self._tracking_service.get_index_entries(file_name)
+        sections_by_id = {
+            str(section["id"]): {
+                "id": str(section["id"]),
+                "name": section["name"],
+                "description": section.get("description", ""),
+            }
+            for section in existing_sections
+        }
 
-        pattern = re.compile(
-            r"<!-- section-id: ([^ ]+?) -->\s*\n(.*?)(?=(<!-- section-id: )|\Z)",
-            re.DOTALL,
-        )
+        for section in written_sections:
+            sections_by_id[str(section["id"])] = {
+                "id": str(section["id"]),
+                "name": section["name"],
+                "description": section.get("description", ""),
+            }
 
-        sections = []
-        for match in pattern.finditer(content):
-            sid = match.group(1)
-            body = match.group(2).strip()
-
-            sections.append({
-                "id": sid,
-                "name": f"Section {sid}",
-                "description": body[:100],
-            })
+        sections = list(sections_by_id.values())
+        sections.sort(key=lambda section: self._sort_key(section["id"]))
 
         self._tracking_service.add_index(file_name, sections)
 
@@ -250,6 +251,10 @@ class WikiUpdate(BaseTool):
             s.setdefault("description", "")
             result.append(s)
         return result
+
+    @staticmethod
+    def _sort_key(section_id: str):
+        return (0, int(section_id)) if str(section_id).isdigit() else (1, str(section_id))
 
     # ─────────────────────────────────────────────────────────────
 
