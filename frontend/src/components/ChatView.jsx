@@ -36,7 +36,7 @@ export default function ChatView({ messages, setMessages, isLoading, setIsLoadin
       const assistantMsg = {
         id: Date.now() + 1,
         role: 'assistant',
-        content: data.result ?? '',
+        content: typeof data.result === 'string' ? data.result : JSON.stringify(data.result ?? ''),
         sources: data.sources ?? [],
         documents: data.documents ?? [],
         timestamp: Date.now(),
