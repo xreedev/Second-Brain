@@ -38,7 +38,7 @@ logs/*
 *.sqlite
 *.db
 uploads/
-database/chroma_db
+database/chroma_db/*
 
 # Database
 *.sqlite
