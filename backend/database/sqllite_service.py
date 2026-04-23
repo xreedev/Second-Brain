@@ -56,6 +56,17 @@ def _initialize_database(db_name=Config.SOURCE_DB_NAME):
         except sqlite3.OperationalError:
             pass
 
+        # SESSIONS TABLE
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS sessions (
+                id TEXT PRIMARY KEY,
+                title TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+
         # MESSAGES TABLE
         cursor.execute(
             """
@@ -68,6 +79,12 @@ def _initialize_database(db_name=Config.SOURCE_DB_NAME):
             """
         )
 
+        # Add session_id column to messages (migration-safe)
+        try:
+            cursor.execute("ALTER TABLE messages ADD COLUMN session_id TEXT REFERENCES sessions(id)")
+        except sqlite3.OperationalError:
+            pass
+
         # MESSAGE SECTIONS TABLE
         cursor.execute(
             """
@@ -76,6 +93,19 @@ def _initialize_database(db_name=Config.SOURCE_DB_NAME):
                 section_id TEXT NOT NULL,
                 PRIMARY KEY (message_id, section_id),
                 FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE
+            )
+            """
+        )
+
+        # INGESTION HISTORY TABLE
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS ingestion_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                file_name TEXT NOT NULL,
+                status TEXT NOT NULL,
+                error_msg TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
             """
         )
