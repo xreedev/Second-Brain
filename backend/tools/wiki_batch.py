@@ -5,7 +5,6 @@ from langchain.tools import BaseTool
 from pydantic import BaseModel, Field, PrivateAttr
 
 from core.config import Config
-from files_service import IndexMapService, WikiTrackingService
 from .wiki_update import WikiUpdate
 
 

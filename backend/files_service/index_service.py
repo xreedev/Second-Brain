@@ -1,40 +1,11 @@
-import json
-import os
 import re
-from core.config import Config
+from database.sqllite_service import SQLiteService
 
 
 class IndexService:
 
-    # ----------------------------
-    # LOAD INDEX FILE (SAFE)
-    # ----------------------------
-    def _load_index(self):
-        if not os.path.exists(Config.INDEX_JSON_FILE_PATH):
-            return []
-
-        with open(Config.INDEX_JSON_FILE_PATH, "r", encoding="utf-8") as f:
-            content = f.read().strip()
-
-            if not content:
-                return []
-
-            try:
-                return json.loads(content)
-            except json.JSONDecodeError:
-                print("WARNING: index.json corrupted, resetting")
-                return []
-
-    # ----------------------------
-    # SAVE INDEX FILE (ATOMIC)
-    # ----------------------------
-    def _save_index(self, data):
-        temp_path = Config.INDEX_JSON_FILE_PATH + ".tmp"
-
-        with open(temp_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
-
-        os.replace(temp_path, Config.INDEX_JSON_FILE_PATH)
+    def _db(self):
+        return SQLiteService()
 
     # ----------------------------
     # EXTRACT SECTION IDS FROM CONTENT
@@ -47,69 +18,59 @@ class IndexService:
     # GET SOURCE IDS FOR A SECTION
     # ----------------------------
     def get_info_from_sectionid(self, section_id: str):
-        index_json = self._load_index()
-
-        result = next(
-            (x for x in index_json if x.get("id") == section_id),
-            None
-        )
-
-        return result.get("source_id") if result else None
+        db = self._db()
+        try:
+            return db.get_source_ids_for_section(section_id)
+        finally:
+            db.close()
 
     # ----------------------------
     # ADD SOURCE ID TO SECTION
     # ----------------------------
     def add_sourceid_to_sectionid(self, section_id: str, source_id: str):
-        index_json = self._load_index()
-        found = False
-
-        for item in index_json:
-            if item.get("id") == section_id:
-                found = True
-
-                # Ensure list
-                if not isinstance(item.get("source_id"), list):
-                    item["source_id"] = (
-                        [item["source_id"]] if item.get("source_id") else []
-                    )
-
-                # Avoid duplicates
-                if source_id not in item["source_id"]:
-                    item["source_id"].append(source_id)
-
-                break
-
-        # If section not found → create new entry
-        if not found:
-            index_json.append({
-                "id": section_id,
-                "source_id": [source_id]
-            })
-
-        self._save_index(index_json)
+        db = self._db()
+        try:
+            db.add_section_source_mapping(section_id, source_id)
+        finally:
+            db.close()
 
     # ----------------------------
     # ADD MULTIPLE SECTIONS FOR SOURCE
     # ----------------------------
     def add_sections_for_source(self, source_id: str, file_name: str, section_ids):
-        for section_id in section_ids:
-            self.add_sourceid_to_sectionid(section_id, source_id)
+        db = self._db()
+        try:
+            for section_id in section_ids:
+                db.add_section_source_mapping(section_id, source_id)
+        finally:
+            db.close()
 
     # ----------------------------
-    # LOAD MAP FILE (SAFE)
+    # LOAD FULL MAP (used by WikiTrackingService)
     # ----------------------------
-    def load(self):
-        if not os.path.exists(Config.INDEX_MAP_FILE_PATH):
-            return {}
+    def load(self) -> dict:
+        db = self._db()
+        try:
+            return db.get_all_wiki_sections()
+        finally:
+            db.close()
 
-        with open(Config.INDEX_MAP_FILE_PATH, "r", encoding="utf-8") as f:
-            content = f.read().strip()
+    # ----------------------------
+    # WRITE FULL MAP (used by WikiTrackingService)
+    # ----------------------------
+    def write(self, source_map: dict):
+        db = self._db()
+        try:
+            db.replace_all_section_entries(source_map)
+        finally:
+            db.close()
 
-            if not content:
-                return {}
-
-            try:
-                return json.loads(content)
-            except json.JSONDecodeError:
-                print("WARNING: index_map.json corrupted, resetting")
-                return {}
+    # ----------------------------
+    # REMAP SECTION IDS (used by WikiTrackingService.renumber_section_ids)
+    # ----------------------------
+    def remap_section_ids(self, id_mapping: dict):
+        db = self._db()
+        try:
+            db.remap_section_ids(id_mapping)
+        finally:
+            db.close()

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Read(//c/Users/simpl/.claude/projects/c--Users-simpl-OneDrive-Desktop-Second-Brain/ab0f81a1-81df-467b-9eaa-d5114ff2ee7e/tool-results/**)"
+    ]
+  }
+}

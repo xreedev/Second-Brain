@@ -31,13 +31,14 @@ ENV/
 *.sw?
 
 # Project specific
-source/
-wiki/
-logs/
+source/*
+wiki/*
+logs/*
 *.log
 *.sqlite
 *.db
 uploads/
+database/chroma_db/*
 
 # Database
 *.sqlite

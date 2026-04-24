@@ -3,12 +3,12 @@ import re
 from typing import List
 from langchain.tools import BaseTool
 from pydantic import BaseModel, PrivateAttr
+from files_service import IndexMapService
+from database.sqllite_service import SQLiteService
 from core.config import Config
-from files_service import IndexService
 
 
 class WikiSectionReadItem(BaseModel):
-    file_name: str
     section_id: str
 
 
@@ -19,74 +19,77 @@ class WikiSectionReadInput(BaseModel):
 class WikiSectionRead(BaseTool):
     name: str = "wiki_section_read"
     description: str = (
-        "Read one or more anchored wiki sections by file_name and section_id. "
-        "Provide requests as an array of {file_name, section_id} objects. "
-        "Returns an array with the matching section content for each request."
+        "Read wiki sections by section_id. "
+        "Returns section content."
     )
-    args_schema: type[BaseModel] = WikiSectionReadInput
-    _index_service: IndexService = PrivateAttr()
 
-    def __init__(self, **kwargs):
+    args_schema: type[BaseModel] = WikiSectionReadInput
+
+    _message_id: str = PrivateAttr()
+    _index_service: object = PrivateAttr()
+
+    def __init__(self, message_id: str, **kwargs):
         super().__init__(**kwargs)
-        self._index_service = IndexService()
+        self._message_id = message_id
+        self._index_service = IndexMapService()
 
     def _run(self, requests: List[WikiSectionReadItem]):
-        print(f"[TOOL] Reading wiki sections - {len(requests)} request(s)")
+        print(f"[TOOL] Reading {len(requests)} section(s) for message_id={self._message_id}")
+
+        if not os.path.exists(Config.INDEX_FILE_PATH):
+            return [{"found": False, "error": "Index file missing"}]
+
+        db = SQLiteService()
         results = []
 
-        for request in requests:
-            file_path = os.path.join(Config.WIKI_BASE_DIR, request.file_name)
-            if not os.path.exists(file_path):
-                results.append(
-                    {
-                        "file_name": request.file_name,
-                        "section_id": request.section_id,
-                        "found": False,
-                        "error": f"File does not exist: {file_path}",
-                    }
-                )
-                continue
+        try:
+            for request in requests:
+                section_id = str(request.section_id)
 
-            try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content = f.read()
-            except Exception as e:
-                results.append(
-                    {
-                        "file_name": request.file_name,
-                        "section_id": request.section_id,
-                        "found": False,
-                        "error": f"Error reading file: {e}",
-                    }
-                )
-                continue
+                db.add_message_section(self._message_id, section_id)
 
-            section_content = self._extract_section(content, request.section_id)
-            if section_content is None:
-                results.append(
-                    {
-                        "file_name": request.file_name,
-                        "section_id": request.section_id,
-                        "found": False,
-                        "error": f"Section ID not found: {request.section_id}",
-                    }
-                )
-                continue
+                section_content = self._extract_section(section_id)
 
-            results.append(
-                {
-                    "file_name": request.file_name,
-                    "section_id": request.section_id,
+                if section_content is None:
+                    results.append({
+                        "section_id": section_id,
+                        "found": False,
+                        "error": "Section not found",
+                    })
+                    continue
+
+                results.append({
+                    "section_id": section_id,
                     "found": True,
                     "content": section_content,
-                    "source_ids": self._index_service.get_source_ids_for_section(request.section_id),
-                }
-            )
+                })
+        finally:
+            db.close()
 
         return results
 
-    def _extract_section(self, content: str, section_id: str):
+    def _extract_section(self, section_id: str):
+        entry = self._index_service.get_entry(str(section_id))
+        if not entry:
+            return None
+
+        file_name = entry.get("file_name")
+        if not file_name:
+            return None
+
+        file_path = os.path.join(Config.WIKI_BASE_DIR, file_name)
+
+        if not os.path.exists(file_path):
+            return None
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+        except Exception:
+            return None
+
         anchor = f"<!-- section-id: {section_id} -->"
+
         if anchor not in content:
             return None
 
@@ -101,8 +104,4 @@ class WikiSectionRead(BaseTool):
         if anchor_idx + 1 >= len(parts):
             return None
 
-        section_body = parts[anchor_idx + 1]
-        if anchor_idx + 2 < len(parts):
-            return section_body.strip()
-
-        return section_body.strip()
+        return parts[anchor_idx + 1].strip()

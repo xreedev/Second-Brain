@@ -62,16 +62,47 @@ class WikiTrackingService:
 
         for section in sections:
             row = (
-                f"| {file_name} "
-                f"| {section['name']} "
-                f"| {section['id']} "
-                f"| {section.get('description', '')} |"
+                f"| {self._escape_cell(file_name)} "
+                f"| {self._escape_cell(section['name'])} "
+                f"| {self._escape_cell(str(section['id']))} "
+                f"| {self._escape_cell(section.get('description', ''))} |"
             )
             lines.insert(insert_idx, row)
             insert_idx += 1
 
         with open(index_path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines))
+
+    def get_index_entries(self, file_name: str | None = None) -> list[dict]:
+        """Parse index.md into structured rows."""
+        self.initialize_if_empty()
+
+        with open(Config.INDEX_FILE_PATH, "r", encoding="utf-8") as f:
+            lines = f.read().splitlines()
+
+        entries = []
+        for line in lines:
+            if not line.startswith("|"):
+                continue
+            if re.match(r"^\|[-| ]+\|$", line):
+                continue
+
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            if len(cells) != 4:
+                continue
+            if cells == ["File", "Section", "Section ID", "Summary"]:
+                continue
+
+            entry = {
+                "file_name": cells[0],
+                "name": cells[1],
+                "id": cells[2],
+                "description": cells[3],
+            }
+            if file_name is None or entry["file_name"] == file_name:
+                entries.append(entry)
+
+        return entries
 
     def read_full_index(self) -> str:
         """Return the complete text of index.md, initialising it if necessary."""
@@ -85,6 +116,10 @@ class WikiTrackingService:
 
     def write_source_map(self, source_map):
         self.index_service.write(source_map)
+
+    @staticmethod
+    def _escape_cell(value: str) -> str:
+        return str(value).replace("\n", " ").replace("|", "\\|").strip()
 
     def get_wiki_section_ids(self):
         section_ids = set()
